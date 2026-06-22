@@ -305,7 +305,12 @@
     </div>
     <div class="field">
       <label>付属品</label>
-      <input type="text" id="accessories-watch" placeholder="例：箱・保証書">
+      <div class="check-grid">
+        <div class="check-item" onclick="toggleCheck(this)" data-value="箱"><span class="check-icon"></span>箱</div>
+        <div class="check-item" onclick="toggleCheck(this)" data-value="ギャランティカード"><span class="check-icon"></span>ギャランティカード</div>
+        <div class="check-item" onclick="toggleCheck(this)" data-value="ベルト"><span class="check-icon"></span>ベルト</div>
+        <div class="check-item" onclick="toggleCheck(this)" data-value="コマ（あまり）"><span class="check-icon"></span>コマ（あまり）</div>
+      </div>
     </div>
     <div class="field">
       <label>特記</label>
@@ -352,14 +357,14 @@
       </div>
     </div>
     <div class="field">
-      <label>ジェムテスター</label>
+      <label>ジェムテスター（石があれば）</label>
       <div style="display:flex;gap:8px">
         <button class="rank-btn" data-gem="済" onclick="selectGem(this)" style="flex:1">済</button>
         <button class="rank-btn" data-gem="不可" onclick="selectGem(this)" style="flex:1">不可</button>
       </div>
     </div>
     <div class="field">
-      <label>ダイヤテスター</label>
+      <label>ダイヤテスター（ダイヤがあれば）</label>
       <div style="display:flex;gap:8px">
         <button class="rank-btn" data-dia="OK" onclick="selectDia(this)" style="flex:1">OK</button>
         <button class="rank-btn" data-dia="NG" onclick="selectDia(this)" style="flex:1">NG</button>
@@ -414,7 +419,7 @@
 
   <div class="btn-row" id="item-actions" style="display:none">
     <button class="btn btn-ghost" onclick="resetItem()">リセット</button>
-    <button class="btn btn-primary" onclick="addToCart()">カートに追加</button>
+    <button class="btn btn-primary" onclick="addToCart()">商品追加完了</button>
   </div>
 </div>
 
@@ -492,7 +497,8 @@ function selectCat(btn) {
   currentImages = [];
   document.getElementById('img-preview').innerHTML = '';
   document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
-  ['brand-watch','name-watch','model-watch','serial-watch','size-w','accessories-watch','note-watch',
+  document.querySelectorAll('#fields-watch .check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
+  ['brand-watch','name-watch','model-watch','serial-watch','size-w','note-watch',
    'kinshu','weight-metal','hiju-val','ct-top','ct-waki'].forEach(id => {
     const el = document.getElementById(id); if (el) { el.value = ''; el.disabled = false; }
   });
@@ -555,7 +561,8 @@ function toggleHijuNG(btn) {
 
 function selectRank(btn) {
   document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
-  ['brand-watch','name-watch','model-watch','serial-watch','size-w','accessories-watch','note-watch',
+  document.querySelectorAll('#fields-watch .check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
+  ['brand-watch','name-watch','model-watch','serial-watch','size-w','note-watch',
    'kinshu','weight-metal','hiju-val','ct-top','ct-waki'].forEach(id => {
     const el = document.getElementById(id); if (el) { el.value = ''; el.disabled = false; }
   });
@@ -620,7 +627,7 @@ function addToCart() {
       serial: document.getElementById('serial-watch').value.trim(),
       caseSize: document.getElementById('size-w').value,
       turbo: document.querySelector('[data-turbo].active')?.dataset.turbo || '',
-      accessories: document.getElementById('accessories-watch').value.trim(),
+      accessories: Array.from(document.querySelectorAll('#fields-watch .check-item.checked')).map(el => el.dataset.value),
       note: document.getElementById('note-watch').value.trim(),
     };
   }
@@ -638,12 +645,11 @@ function addToCart() {
       stone: document.querySelector('[data-stone].active')?.dataset.stone || '',
       gem: document.querySelector('[data-gem].active')?.dataset.gem || '',
       dia: document.querySelector('[data-dia].active')?.dataset.dia || '',
-      ctChain: document.getElementById('ct-chain').value,
       ctTop: document.getElementById('ct-top').value,
       ctWaki: document.getElementById('ct-waki').value,
     };
   }
-  const rankBtn = document.querySelector('.rank-btn.active');
+  const rankBtn = document.querySelector('[data-rank].active');
   const rank = rankBtn ? rankBtn.dataset.rank : '';
   const conditions = Array.from(document.querySelectorAll('.check-item.checked')).map(el => el.dataset.value);
   cart.push({ cat: currentCat, brand, productName, serial, metal, rank, conditions, watchData, metalData, images: [...currentImages] });
@@ -696,7 +702,8 @@ function resetItem() {
   document.getElementById('item-actions').style.display = 'none';
   document.getElementById('img-preview').innerHTML = '';
   document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
-  ['brand-watch','name-watch','model-watch','serial-watch','size-w','accessories-watch','note-watch',
+  document.querySelectorAll('#fields-watch .check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
+  ['brand-watch','name-watch','model-watch','serial-watch','size-w','note-watch',
    'kinshu','weight-metal','hiju-val','ct-top','ct-waki'].forEach(id => {
     const el = document.getElementById(id); if (el) { el.value = ''; el.disabled = false; }
   });
@@ -742,7 +749,7 @@ async function submitToAsana() {
       if (w.serial) parts.push('シリアル: ' + w.serial);
       if (w.caseSize) parts.push('ケースサイズ: ' + w.caseSize);
       if (w.turbo) parts.push('ターボテスター: ' + w.turbo);
-      if (w.accessories) parts.push('付属品: ' + w.accessories);
+      if (w.accessories && w.accessories.length > 0) parts.push('付属品: ' + w.accessories.join('・'));
       if (w.note) parts.push('特記: ' + w.note);
     }
     if (item.metalData && item.metalData.kinshu) {
