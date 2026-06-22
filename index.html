@@ -136,6 +136,27 @@
     background: var(--bg); color: var(--sub); cursor: pointer; text-align: center; transition: all .15s;
   }
   .rank-btn.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+  .brand-search-wrap { position: relative; }
+  .brand-search-input {
+    width: 100%; border: 1px solid var(--border); border-radius: 7px;
+    padding: 10px 12px; font-size: 15px; font-family: var(--font);
+    background: var(--bg); color: var(--text); outline: none; transition: border-color .15s;
+  }
+  .brand-search-input:focus { border-color: var(--accent); background: #fff; }
+  .brand-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
+    margin-top: 4px; max-height: 200px; overflow-y: auto; display: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .brand-dropdown.open { display: block; }
+  .brand-option {
+    padding: 10px 12px; font-size: 14px; cursor: pointer; color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand-option:last-child { border-bottom: none; }
+  .brand-option:hover { background: var(--accent-light); color: var(--accent); }
+  .brand-selected { color: var(--accent); font-weight: 600; }
   .pat-note { font-size: 13px; color: var(--sub); margin-bottom: 14px; line-height: 1.6; }
   .pat-reset { font-size: 12px; color: var(--sub); text-align: right; margin-top: 8px; cursor: pointer; text-decoration: underline; }
 </style>
@@ -230,11 +251,10 @@
   <div id="fields-bag" style="display:none">
     <div class="field">
       <label>ブランド</label>
-      <select id="brand-bag">
-        <option value="">選択してください</option>
-        <option>Louis Vuitton</option><option>HERMES</option>
-        <option>CHANEL</option><option>GUCCI</option>
-      </select>
+      <div class="brand-search-wrap">
+        <input type="text" class="brand-search-input" id="brand-bag" placeholder="ブランド名を入力（例：るい）" oninput="searchBrand(this,'brand-bag-drop')" onblur="closeDrop('brand-bag-drop')" autocomplete="off">
+        <div class="brand-dropdown" id="brand-bag-drop"></div>
+      </div>
     </div>
     <div class="field">
       <label>商品名（わかる範囲で）</label>
@@ -250,11 +270,10 @@
   <div id="fields-jewelry" style="display:none">
     <div class="field">
       <label>ブランド</label>
-      <select id="brand-jewelry">
-        <option value="">選択してください</option>
-        <option>Louis Vuitton</option><option>Cartier</option>
-        <option>CHANEL</option><option>Tiffany</option>
-      </select>
+      <div class="brand-search-wrap">
+        <input type="text" class="brand-search-input" id="brand-jewelry" placeholder="ブランド名を入力（例：てぃふ）" oninput="searchBrand(this,'brand-jewelry-drop')" onblur="closeDrop('brand-jewelry-drop')" autocomplete="off">
+        <div class="brand-dropdown" id="brand-jewelry-drop"></div>
+      </div>
     </div>
     <div class="field">
       <label>商品名（わかる範囲で）</label>
@@ -278,7 +297,10 @@
   <div id="fields-watch" style="display:none">
     <div class="field">
       <label>ブランド</label>
-      <input type="text" id="brand-watch" placeholder="例：ROLEX">
+      <div class="brand-search-wrap">
+        <input type="text" class="brand-search-input" id="brand-watch" placeholder="ブランド名を入力（例：ろれ）" oninput="searchBrand(this,'brand-watch-drop')" onblur="closeDrop('brand-watch-drop')" autocomplete="off">
+        <div class="brand-dropdown" id="brand-watch-drop"></div>
+      </div>
     </div>
     <div class="field">
       <label>商品名</label>
@@ -305,11 +327,11 @@
     </div>
     <div class="field">
       <label>付属品</label>
-      <div class="check-grid">
-        <div class="check-item" onclick="toggleCheck(this)" data-value="箱"><span class="check-icon"></span>箱</div>
-        <div class="check-item" onclick="toggleCheck(this)" data-value="ギャランティカード"><span class="check-icon"></span>ギャランティカード</div>
-        <div class="check-item" onclick="toggleCheck(this)" data-value="ベルト"><span class="check-icon"></span>ベルト</div>
-        <div class="check-item" onclick="toggleCheck(this)" data-value="コマ（あまり）"><span class="check-icon"></span>コマ（あまり）</div>
+      <div class="check-grid" id="watch-accessories-grid">
+        <div class="check-item watch-acc" onclick="toggleCheckAcc(this)" data-value="箱"><span class="check-icon"></span>箱</div>
+        <div class="check-item watch-acc" onclick="toggleCheckAcc(this)" data-value="ギャランティカード"><span class="check-icon"></span>ギャランティカード</div>
+        <div class="check-item watch-acc" onclick="toggleCheckAcc(this)" data-value="ベルト"><span class="check-icon"></span>ベルト</div>
+        <div class="check-item watch-acc" onclick="toggleCheckAcc(this)" data-value="コマ（あまり）"><span class="check-icon"></span>コマ（あまり）</div>
       </div>
     </div>
     <div class="field">
@@ -515,6 +537,42 @@ function selectCat(btn) {
 // --- Images ---
 
 
+
+const BRANDS = {
+  'ブランドバッグ': ['ルイヴィトン','エルメス','グッチ','クロエ','ケイトスペード','コーチ','サンローラン','シャネル','ダンヒル','トリーバーチ','バーバリー','サルヴァトーレフェラガモ','プラダ','ブルガリ','フルラ','マークジェイコブス','マイケルコース','ロエベ','マルニ','ティファニー','ヴァレクストラ','フェンディ','ジバンシィ','クリスチャンディオール','ミュウミュウ','カルティエ','ヴェルサーチ','バレンシアガ','バカラ','ヴァレンティノ','メゾンマルジェラ','ドルチェ＆ガッバーナ','バオバオ','ゴヤール','セリーヌ','ボッテガヴェネタ','ハンター','ステラマッカートニー','ヴィヴィアンウエストウッド','クリスチャンルブタン','ロンシャン','バリー','プリマクラッセ','ジミーチュウ','モンブラン','MCM','サマンサ','ポーター','キプリング','マンハッタンポーテージ','パトリックコックス','クロムハーツ','エトロ','ゲス','アルマーニ','カルバンクライン','トミーヒルフィガー','ディーゼル','レスポートサック','マリオバレンチノ','ボルボネーゼ','フェイラー','アンテプリマ','キャスキッドソン','イルビゾンテ','ポールスミス','アニエスベー','シーバイクロエ','オロビアンコ','フルボ','ダコタ','ハンティングワールド'],
+  'ブランド小物': ['ルイヴィトン','エルメス','グッチ','クロエ','ケイトスペード','コーチ','サンローラン','シャネル','ダンヒル','トリーバーチ','バーバリー','サルヴァトーレフェラガモ','プラダ','ブルガリ','フルラ','マークジェイコブス','マイケルコース','ロエベ','マルニ','ティファニー','ヴァレクストラ','フェンディ','ジバンシィ','クリスチャンディオール','ミュウミュウ','カルティエ','ヴェルサーチ','バレンシアガ','バカラ','ヴァレンティノ','メゾンマルジェラ','ドルチェ＆ガッバーナ','バオバオ','ゴヤール','セリーヌ','ボッテガヴェネタ','クロムハーツ','エトロ','ゲス','アルマーニ','カルバンクライン','トミーヒルフィガー','ディーゼル','ポールスミス'],
+  'ブランドジュエリー': ['ルイヴィトン','エルメス','グッチ','クロエ','ケイトスペード','コーチ','サンローラン','シャネル','ダンヒル','トリーバーチ','バーバリー','サルヴァトーレフェラガモ','プラダ','ブルガリ','フルラ','マークジェイコブス','マイケルコース','ロエベ','マルニ','ティファニー','フェンディ','ジバンシィ','クリスチャンディオール','ミュウミュウ','カルティエ','ヴェルサーチ','バレンシアガ','バカラ','ヴァレンティノ','ドルチェ＆ガッバーナ','セリーヌ','ボッテガヴェネタ','ブシュロン','ハリーウィンストン','ミキモト','ポメラート','グラフ','タサキ','ヴァンクリーフアーペル','モーブッサン','ジミーチュウ','ショパール','フレッド','ショーメ','スワロフスキー','ダミアーニ','ヴィヴィアンウエストウッド','4℃','クロムハーツ','カルバンクライン','トミーヒルフィガー','ディーゼル','ゲス','ポリス'],
+  '時計': ['グランドセイコー','クレドール','ロレックス','オメガ','タグホイヤー','ロンジン','パテックフィリップ','オーデマピゲ','ヴァシュロンコンスタンタン','A.ランゲ＆ゾーネ','ブレゲ','ブランパン','ジャガールクルト','チューダー','IWC','パネライ','ゼニス','ブライトリング','カルティエ','ティファニー','エルメス','グッチ','ショパール','ピアジェ','クラスヒュッテオリジナル','ハリーウィンストン','シャネル','ラドー','ジラールペルゴ','コルム','オリス','ノモスグラスヒュッテ','ユリスナルダン','フレデリックコンスタント','ハミルトン','ティソ','モンブラン','ユンハンス','エドックス','ドルチェ＆ガッバーナ','セイコー','カシオ','シチズン','ザシチズン','オリエント','オリエントスター','ガガミラノ','ダニエルウエリントン','コーチ','ケートスペード','マイケルコース','ポールスミス','ディーゼル','タイメックス','ルミノックス','ヴェルサーチェ','ポリス','フェンディ','フェラガモ','ドルチェ＆ガッバーナ','ダンヒル','バーバリー','アルマーニ','フルラ','トミーヒルフィガー','カルバンクライン','ベル＆ロス','フランクミュラー','ルイヴィトン','ブルガリ','ボーム＆メルシエ','ジン','ハブロット']
+};
+
+function searchBrand(input, dropId) {
+  const q = input.value.trim();
+  const drop = document.getElementById(dropId);
+  if (!q || q.length < 1) { drop.classList.remove('open'); return; }
+  const cat = currentCat || '';
+  const list = BRANDS[cat] || [];
+  // ひらがな→カタカナ変換して部分一致
+  const toKatakana = s => s.replace(/[\u3041-\u3096]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+  const qk = toKatakana(q);
+  const results = list.filter(b => b.includes(q) || b.includes(qk) || toKatakana(b).includes(qk));
+  if (results.length === 0) { drop.classList.remove('open'); return; }
+  drop.innerHTML = results.slice(0, 20).map(b =>
+    '<div class="brand-option" onmousedown="selectBrand(\'' + b + '\',\'' + input.id + '\',\'' + dropId + '\')">' + b + '</div>'
+  ).join('');
+  drop.classList.add('open');
+}
+
+function selectBrand(val, inputId, dropId) {
+  document.getElementById(inputId).value = val;
+  document.getElementById(dropId).classList.remove('open');
+}
+
+function closeDrop(dropId) {
+  setTimeout(() => {
+    const d = document.getElementById(dropId);
+    if (d) d.classList.remove('open');
+  }, 150);
+}
 function selectRepeater(btn) {
   document.querySelectorAll('[data-repeater]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -563,6 +621,11 @@ function toggleHijuNG(btn) {
 function selectRank(btn) {
   document.querySelectorAll('[data-rank]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+}
+
+function toggleCheckAcc(el) {
+  el.classList.toggle('checked');
+  el.querySelector('.check-icon').textContent = el.classList.contains('checked') ? '✓' : '';
 }
 
 function toggleCheck(el) {
@@ -623,7 +686,7 @@ function addToCart() {
       serial: document.getElementById('serial-watch').value.trim(),
       caseSize: document.getElementById('size-w').value,
       turbo: document.querySelector('[data-turbo].active')?.dataset.turbo || '',
-      accessories: Array.from(document.querySelectorAll('#fields-watch .check-item.checked')).map(el => el.dataset.value),
+      accessories: Array.from(document.querySelectorAll('.watch-acc.checked')).map(el => el.dataset.value),
       note: document.getElementById('note-watch').value.trim(),
     };
   }
@@ -700,7 +763,7 @@ function resetItem() {
   document.getElementById('img-preview').innerHTML = '';
   document.querySelectorAll('[data-rank]').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('[data-jsei],[data-stone],[data-gem],[data-dia],[data-turbo],[data-auth],[data-smell]').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('#fields-watch .check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
+  document.querySelectorAll('.watch-acc').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
   ['brand-watch','name-watch','model-watch','serial-watch','size-w','note-watch',
    'kinshu','weight-metal','hiju-val','ct-top','ct-waki'].forEach(id => {
     const el = document.getElementById(id); if (el) { el.value = ''; el.disabled = false; }
@@ -741,15 +804,13 @@ async function submitToAsana() {
     if (item.metal) parts.push('金属種類: ' + item.metal);
     if (item.cat === '時計' && item.watchData) {
       const w = item.watchData;
-      if (w.brand) parts.push('ブランド: ' + w.brand);
+      if (w.brand) parts.push('ブランド: ' + w.brand); // 空の場合スキップ済み
       if (w.name) parts.push('商品名: ' + w.name);
       if (w.model) parts.push('型番: ' + w.model);
       if (w.serial) parts.push('シリアル: ' + w.serial);
       if (w.caseSize) parts.push('ケースサイズ: ' + w.caseSize);
       if (w.turbo) parts.push('ターボテスター: ' + w.turbo);
-      else parts.push('ターボテスター: 未選択');
       if (w.accessories && w.accessories.length > 0) parts.push('付属品: ' + w.accessories.join('・'));
-      else parts.push('付属品: なし');
       if (w.note) parts.push('特記: ' + w.note);
     }
     if (item.cat === '貴金属' && item.metalData) {
