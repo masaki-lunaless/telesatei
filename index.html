@@ -753,12 +753,14 @@ async function submitToAsana() {
       if (w.serial) parts.push('シリアル: ' + w.serial);
       if (w.caseSize) parts.push('ケースサイズ: ' + w.caseSize);
       if (w.turbo) parts.push('ターボテスター: ' + w.turbo);
+      else parts.push('ターボテスター: 未選択');
       if (w.accessories && w.accessories.length > 0) parts.push('付属品: ' + w.accessories.join('・'));
+      else parts.push('付属品: なし');
       if (w.note) parts.push('特記: ' + w.note);
     }
     if (item.cat === '貴金属' && item.metalData) {
       const m = item.metalData;
-      if (m.kinshu) parts.push('金種: ' + m.kinshu);
+      if (m.kinshu) parts.push('金種: ' + m.kinshu); else parts.push('金種: 未選択');
       if (m.weight) parts.push('総重量: ' + m.weight + 'g');
       if (m.hiju) parts.push('比重値: ' + m.hiju);
       if (m.jsei) parts.push('磁性: ' + m.jsei);
