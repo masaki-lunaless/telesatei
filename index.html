@@ -279,16 +279,16 @@
     <div class="field">
       <label>どんな状態（複数選択可）</label>
       <div class="check-grid" id="condition-checks">
-        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="傷"><span class="check-icon"></span>傷</label>
-        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="擦り傷"><span class="check-icon"></span>擦り傷</label>
-        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="汚れ"><span class="check-icon"></span>汚れ</label>
-        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="シミ"><span class="check-icon"></span>シミ</label>
-        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="カビ"><span class="check-icon"></span>カビ</label>
-        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="色褪せ"><span class="check-icon"></span>色褪せ</label>
-        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="金具の傷"><span class="check-icon"></span>金具の傷</label>
-        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="ちぎれかけ"><span class="check-icon"></span>ちぎれかけ</label>
-        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="破れ"><span class="check-icon"></span>破れ</label>
-        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="臭い"><span class="check-icon"></span>臭い</label>
+        <div class="check-item" onclick="toggleCheck(this)" data-value="傷"><span class="check-icon"></span>傷</div>
+        <div class="check-item" onclick="toggleCheck(this)" data-value="擦り傷"><span class="check-icon"></span>擦り傷</div>
+        <div class="check-item" onclick="toggleCheck(this)" data-value="汚れ"><span class="check-icon"></span>汚れ</div>
+        <div class="check-item" onclick="toggleCheck(this)" data-value="シミ"><span class="check-icon"></span>シミ</div>
+        <div class="check-item" onclick="toggleCheck(this)" data-value="カビ"><span class="check-icon"></span>カビ</div>
+        <div class="check-item" onclick="toggleCheck(this)" data-value="色褪せ"><span class="check-icon"></span>色褪せ</div>
+        <div class="check-item" onclick="toggleCheck(this)" data-value="金具の傷"><span class="check-icon"></span>金具の傷</div>
+        <div class="check-item" onclick="toggleCheck(this)" data-value="ちぎれかけ"><span class="check-icon"></span>ちぎれかけ</div>
+        <div class="check-item" onclick="toggleCheck(this)" data-value="破れ"><span class="check-icon"></span>破れ</div>
+        <div class="check-item" onclick="toggleCheck(this)" data-value="臭い"><span class="check-icon"></span>臭い</div>
       </div>
     </div>
   </div>
@@ -383,7 +383,7 @@ function selectCat(btn) {
   currentImages = [];
   document.getElementById('img-preview').innerHTML = '';
   document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('input').checked = false; });
+  document.querySelectorAll('.check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
   ['name-bag','serial-bag','brand-bag','name-jewelry','serial-jewelry','metal','brand-jewelry']
     .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.getElementById('fields-bag').style.display =
@@ -404,7 +404,6 @@ function selectRank(btn) {
 
 function toggleCheck(el) {
   el.classList.toggle('checked');
-  el.querySelector('input').checked = el.classList.contains('checked');
   el.querySelector('.check-icon').textContent = el.classList.contains('checked') ? '✓' : '';
 }
 
@@ -453,7 +452,7 @@ function addToCart() {
   if (!brand) return showToast('ブランドを選択してください');
   const rankBtn = document.querySelector('.rank-btn.active');
   const rank = rankBtn ? rankBtn.dataset.rank : '';
-  const conditions = Array.from(document.querySelectorAll('.check-item.checked input')).map(i => i.value);
+  const conditions = Array.from(document.querySelectorAll('.check-item.checked')).map(el => el.dataset.value);
   cart.push({ cat: currentCat, brand, productName, serial, metal, rank, conditions, images: [...currentImages] });
   renderCart();
   resetItem();
@@ -500,7 +499,7 @@ function resetItem() {
   document.getElementById('item-actions').style.display = 'none';
   document.getElementById('img-preview').innerHTML = '';
   document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('input').checked = false; });
+  document.querySelectorAll('.check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
   ['name-bag','serial-bag','brand-bag','name-jewelry','serial-jewelry','metal','brand-jewelry']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 }
