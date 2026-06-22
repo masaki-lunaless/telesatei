@@ -454,23 +454,19 @@ async function submitToAsana() {
   btn.disabled = true;
   btn.textContent = '送信中...';
 
-  const lines = [
-    `<start>`,
-    `店舗: ${store}`,
-    `起票者: ${requester}`,
-    `総点数: ${totalItems}点`,
-    ``,
-    ...cart.map((item, i) => {
-      const parts = [`${i + 1}:`, `カテゴリ: ${item.cat}`, `ブランド: ${item.brand}`];
-      if (item.productName) parts.push(`商品名: ${item.productName}`);
-      if (item.serial) parts.push(`型番: ${item.serial}`);
-      if (item.metal) parts.push(`金属種類: ${item.metal}`);
-      if (item.images.length > 0) parts.push(`画像: ${item.images.length}枚添付`);
-      return parts.join('\n');
-    }).join('\n\n'),
-    ``,
-    `<end>`
-  ].join('\n');
+  const NL = String.fromCharCode(10);
+  const itemTexts = cart.map((item, i) => {
+    const parts = [(i + 1) + ':', 'カテゴリ: ' + item.cat, 'ブランド: ' + item.brand];
+    if (item.productName) parts.push('商品名: ' + item.productName);
+    if (item.serial) parts.push('型番: ' + item.serial);
+    if (item.metal) parts.push('金属種類: ' + item.metal);
+    if (item.images.length > 0) parts.push('画像: ' + item.images.length + '枚添付');
+    return parts.join(NL);
+  });
+  const lines = ['<start>', '店舗: ' + store, '起票者: ' + requester, '総点数: ' + totalItems + '点', '']
+    .concat(itemTexts)
+    .concat(['', '<end>'])
+    .join(NL);
 
   const taskName = `【査定依頼】${store} / ${requester} (${cart.length}点)`;
 
