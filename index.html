@@ -145,7 +145,7 @@
 <!-- PAT Setup Screen -->
 <div id="pat-screen" style="display:none">
   <header>
-    <img src="telesatei2.png" alt="TELESA:TEI2" style="height:80px;margin-bottom:8px">
+    <img src="telesatei2.png" alt="TELESA:TEI" style="height:80px;margin-bottom:8px">
     <h1>初期設定</h1>
   </header>
   <div class="card">
@@ -163,7 +163,7 @@
 <div id="main-app" style="display:none">
 
 <header>
-  <img src="telesatei.png" alt="TELESA:TEI" style="height:80px;margin-bottom:8px">
+  <img src="telesatei2.png" alt="TELESA:TEI" style="height:80px;margin-bottom:8px">
   <h1>リモート査定 依頼フォーム</h1>
 </header>
 
@@ -356,21 +356,21 @@
         <button class="rank-btn" data-stone="両方" onclick="selectStone(this)">両方</button>
       </div>
     </div>
-    <div class="field">
+    <div class="field" id="field-gem" style="display:none">
       <label>ジェムテスター（石があれば）</label>
       <div style="display:flex;gap:8px">
         <button class="rank-btn" data-gem="済" onclick="selectGem(this)" style="flex:1">済</button>
         <button class="rank-btn" data-gem="不可" onclick="selectGem(this)" style="flex:1">不可</button>
       </div>
     </div>
-    <div class="field">
+    <div class="field" id="field-dia" style="display:none">
       <label>ダイヤテスター（ダイヤがあれば）</label>
       <div style="display:flex;gap:8px">
         <button class="rank-btn" data-dia="OK" onclick="selectDia(this)" style="flex:1">OK</button>
         <button class="rank-btn" data-dia="NG" onclick="selectDia(this)" style="flex:1">NG</button>
       </div>
     </div>
-    <div class="field">
+    <div class="field" id="field-ct" style="display:none">
       <label>ct（主石 / 脇石）</label>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <input type="number" id="ct-top" placeholder="主石" step="0.01">
@@ -544,10 +544,17 @@ function selectSmell(btn) {
 function selectJsei(btn) {
   document.querySelectorAll('[data-jsei]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  if (btn.dataset.jsei === '有') {
+    showModal('この商品は預かりになります');
+  }
 }
 function selectStone(btn) {
   document.querySelectorAll('[data-stone]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  const hasStone = btn.dataset.stone !== 'なし';
+  document.getElementById('field-gem').style.display = hasStone ? 'block' : 'none';
+  document.getElementById('field-dia').style.display = hasStone ? 'block' : 'none';
+  document.getElementById('field-ct').style.display = hasStone ? 'block' : 'none';
 }
 function selectGem(btn) {
   document.querySelectorAll('[data-gem]').forEach(b => b.classList.remove('active'));
@@ -701,6 +708,7 @@ function resetItem() {
   document.getElementById('fields-jewelry').style.display = 'none';
   document.getElementById('fields-watch').style.display = 'none';
   document.getElementById('fields-metal').style.display = 'none';
+  ['field-gem','field-dia','field-ct'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
   document.getElementById('field-condition').style.display = 'none';
   document.getElementById('field-images').style.display = 'none';
   document.getElementById('item-actions').style.display = 'none';
@@ -842,6 +850,21 @@ function resetAll() {
   document.getElementById('section-header').style.display = 'block';
   document.getElementById('section-item').style.display = 'block';
   document.getElementById('section-cart').style.display = 'block';
+}
+
+function showModal(msg) {
+  const existing = document.getElementById('modal-overlay');
+  if (existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML = '<div style="background:#fff;border-radius:12px;padding:24px;max-width:280px;width:100%;text-align:center">' +
+    '<div style="font-size:28px;margin-bottom:12px">⚠️</div>' +
+    '<div style="font-size:16px;font-weight:700;color:#1A1916;margin-bottom:8px">預かり案件</div>' +
+    '<div style="font-size:14px;color:#7A7770;margin-bottom:20px">' + msg + '</div>' +
+    '<button onclick="document.getElementById('modal-overlay').remove()" style="background:#2B4C3F;color:#fff;border:none;border-radius:8px;padding:12px 32px;font-size:15px;font-weight:700;cursor:pointer;width:100%">OK</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
 }
 
 function showToast(msg) {
