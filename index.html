@@ -498,18 +498,6 @@ function selectCat(btn) {
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentCat = btn.dataset.cat;
-  currentImages = [];
-  document.getElementById('img-preview').innerHTML = '';
-  document.querySelectorAll('[data-rank]').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('[data-jsei],[data-stone],[data-gem],[data-dia],[data-turbo],[data-auth],[data-smell]').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('#fields-watch .check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
-  ['brand-watch','name-watch','model-watch','serial-watch','size-w','note-watch',
-   'kinshu','weight-metal','hiju-val','ct-top','ct-waki'].forEach(id => {
-    const el = document.getElementById(id); if (el) { el.value = ''; el.disabled = false; }
-  });
-  document.querySelectorAll('.check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
-  ['name-bag','serial-bag','brand-bag','name-jewelry','serial-jewelry','metal','brand-jewelry']
-    .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.getElementById('fields-bag').style.display =
     (currentCat === 'ブランドバッグ' || currentCat === 'ブランド小物') ? 'block' : 'none';
   document.getElementById('fields-jewelry').style.display =
@@ -522,6 +510,7 @@ function selectCat(btn) {
   document.getElementById('field-images').style.display = 'block';
   document.getElementById('item-actions').style.display = 'flex';
 }
+
 
 // --- Images ---
 
@@ -573,12 +562,6 @@ function toggleHijuNG(btn) {
 
 function selectRank(btn) {
   document.querySelectorAll('[data-rank]').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('[data-jsei],[data-stone],[data-gem],[data-dia],[data-turbo],[data-auth],[data-smell]').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('#fields-watch .check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
-  ['brand-watch','name-watch','model-watch','serial-watch','size-w','note-watch',
-   'kinshu','weight-metal','hiju-val','ct-top','ct-waki'].forEach(id => {
-    const el = document.getElementById(id); if (el) { el.value = ''; el.disabled = false; }
-  });
   btn.classList.add('active');
 }
 
