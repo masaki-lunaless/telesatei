@@ -675,8 +675,8 @@ function renderCart() {
           ${item.productName ? `<br>${item.productName}` : ''}
           ${item.serial ? `<br>型番: ${item.serial}` : ''}
           ${item.metal ? `<br>金属: ${item.metal}` : ''}
-          ${item.watchData && item.watchData.brand ? `<br>${item.watchData.brand} ${item.watchData.name}` : ''}
-          ${item.metalData && item.metalData.kinshu ? `<br>${item.metalData.kinshu} ${item.metalData.weight ? item.metalData.weight+'g' : ''}` : ''}
+          ${item.cat === '時計' && item.watchData && item.watchData.brand ? `<br>${item.watchData.brand} ${item.watchData.name}` : ''}
+          ${item.cat === '貴金属' && item.metalData && item.metalData.kinshu ? `<br>${item.metalData.kinshu} ${item.metalData.weight ? item.metalData.weight+'g' : ''}` : ''}
           ${item.rank ? `<br>状態: ${item.rank}` : ''}
           ${item.conditions && item.conditions.length > 0 ? `<br><span style="color:var(--sub);font-size:12px">${item.conditions.join('・')}</span>` : ''}
         </div>
@@ -745,7 +745,7 @@ async function submitToAsana() {
     if (item.productName) parts.push('商品名: ' + item.productName);
     if (item.serial) parts.push('型番: ' + item.serial);
     if (item.metal) parts.push('金属種類: ' + item.metal);
-    if (item.watchData && item.watchData.brand) {
+    if (item.cat === '時計' && item.watchData) {
       const w = item.watchData;
       if (w.brand) parts.push('ブランド: ' + w.brand);
       if (w.name) parts.push('商品名: ' + w.name);
@@ -756,7 +756,7 @@ async function submitToAsana() {
       if (w.accessories && w.accessories.length > 0) parts.push('付属品: ' + w.accessories.join('・'));
       if (w.note) parts.push('特記: ' + w.note);
     }
-    if (item.metalData && item.metalData.kinshu) {
+    if (item.cat === '貴金属' && item.metalData) {
       const m = item.metalData;
       if (m.kinshu) parts.push('金種: ' + m.kinshu);
       if (m.weight) parts.push('総重量: ' + m.weight + 'g');
