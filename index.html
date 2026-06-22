@@ -114,6 +114,28 @@
   .submit-result.show { display: block; }
   .submit-result h2 { color: var(--accent); font-size: 18px; margin-bottom: 8px; }
   .submit-result p { font-size: 14px; color: var(--sub); }
+  .check-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px;
+  }
+  .check-item {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 7px; padding: 8px 10px; cursor: pointer;
+    font-size: 13px; color: var(--text); transition: all .15s;
+  }
+  .check-item input[type="checkbox"] { display: none; }
+  .check-item.checked {
+    border-color: var(--accent); background: var(--accent-light); color: var(--accent); font-weight: 600;
+  }
+  .check-icon { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+  .check-item.checked .check-icon { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .rank-grid { display: flex; gap: 6px; }
+  .rank-btn {
+    flex: 1; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 4px;
+    font-size: 14px; font-weight: 700; font-family: var(--font);
+    background: var(--bg); color: var(--sub); cursor: pointer; text-align: center; transition: all .15s;
+  }
+  .rank-btn.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
   .pat-note { font-size: 13px; color: var(--sub); margin-bottom: 14px; line-height: 1.6; }
   .pat-reset { font-size: 12px; color: var(--sub); text-align: right; margin-top: 8px; cursor: pointer; text-decoration: underline; }
 </style>
@@ -242,6 +264,35 @@
     </div>
   </div>
 
+  <!-- 状態（全カテゴリ共通） -->
+  <div id="field-condition" style="display:none">
+    <div class="field">
+      <label>状態</label>
+      <div class="rank-grid">
+        <button class="rank-btn" data-rank="S" onclick="selectRank(this)">S</button>
+        <button class="rank-btn" data-rank="A" onclick="selectRank(this)">A</button>
+        <button class="rank-btn" data-rank="B" onclick="selectRank(this)">B</button>
+        <button class="rank-btn" data-rank="C" onclick="selectRank(this)">C</button>
+        <button class="rank-btn" data-rank="D" onclick="selectRank(this)">D</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>どんな状態（複数選択可）</label>
+      <div class="check-grid" id="condition-checks">
+        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="傷"><span class="check-icon"></span>傷</label>
+        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="擦り傷"><span class="check-icon"></span>擦り傷</label>
+        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="汚れ"><span class="check-icon"></span>汚れ</label>
+        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="シミ"><span class="check-icon"></span>シミ</label>
+        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="カビ"><span class="check-icon"></span>カビ</label>
+        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="色褪せ"><span class="check-icon"></span>色褪せ</label>
+        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="金具の傷"><span class="check-icon"></span>金具の傷</label>
+        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="ちぎれかけ"><span class="check-icon"></span>ちぎれかけ</label>
+        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="破れ"><span class="check-icon"></span>破れ</label>
+        <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" value="臭い"><span class="check-icon"></span>臭い</label>
+      </div>
+    </div>
+  </div>
+
   <!-- 画像 -->
   <div class="field" id="field-images" style="display:none">
     <label>画像</label>
@@ -331,17 +382,32 @@ function selectCat(btn) {
   currentCat = btn.dataset.cat;
   currentImages = [];
   document.getElementById('img-preview').innerHTML = '';
+  document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('input').checked = false; });
   ['name-bag','serial-bag','brand-bag','name-jewelry','serial-jewelry','metal','brand-jewelry']
     .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.getElementById('fields-bag').style.display =
     (currentCat === 'ブランドバッグ' || currentCat === 'ブランド小物') ? 'block' : 'none';
   document.getElementById('fields-jewelry').style.display =
     currentCat === 'ブランドジュエリー' ? 'block' : 'none';
+  document.getElementById('field-condition').style.display = 'block';
   document.getElementById('field-images').style.display = 'block';
   document.getElementById('item-actions').style.display = 'flex';
 }
 
 // --- Images ---
+
+function selectRank(btn) {
+  document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+  el.querySelector('input').checked = el.classList.contains('checked');
+  el.querySelector('.check-icon').textContent = el.classList.contains('checked') ? '✓' : '';
+}
+
 function addImages(input) {
   Array.from(input.files).forEach(file => {
     const reader = new FileReader();
@@ -385,7 +451,10 @@ function addToCart() {
     metal = document.getElementById('metal').value;
   }
   if (!brand) return showToast('ブランドを選択してください');
-  cart.push({ cat: currentCat, brand, productName, serial, metal, images: [...currentImages] });
+  const rankBtn = document.querySelector('.rank-btn.active');
+  const rank = rankBtn ? rankBtn.dataset.rank : '';
+  const conditions = Array.from(document.querySelectorAll('.check-item.checked input')).map(i => i.value);
+  cart.push({ cat: currentCat, brand, productName, serial, metal, rank, conditions, images: [...currentImages] });
   renderCart();
   resetItem();
   updateSubmitBtn();
@@ -404,6 +473,8 @@ function renderCart() {
           ${item.productName ? `<br>${item.productName}` : ''}
           ${item.serial ? `<br>型番: ${item.serial}` : ''}
           ${item.metal ? `<br>金属: ${item.metal}` : ''}
+          ${item.rank ? `<br>状態: ${item.rank}` : ''}
+          ${item.conditions && item.conditions.length > 0 ? `<br><span style="color:var(--sub);font-size:12px">${item.conditions.join('・')}</span>` : ''}
         </div>
         ${item.images.length > 0 ? `<div class="cart-item-img">📷 画像 ${item.images.length}枚</div>` : ''}
       </div>
@@ -424,9 +495,12 @@ function resetItem() {
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('fields-bag').style.display = 'none';
   document.getElementById('fields-jewelry').style.display = 'none';
+  document.getElementById('field-condition').style.display = 'none';
   document.getElementById('field-images').style.display = 'none';
   document.getElementById('item-actions').style.display = 'none';
   document.getElementById('img-preview').innerHTML = '';
+  document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('input').checked = false; });
   ['name-bag','serial-bag','brand-bag','name-jewelry','serial-jewelry','metal','brand-jewelry']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 }
@@ -460,6 +534,8 @@ async function submitToAsana() {
     if (item.productName) parts.push('商品名: ' + item.productName);
     if (item.serial) parts.push('型番: ' + item.serial);
     if (item.metal) parts.push('金属種類: ' + item.metal);
+    if (item.rank) parts.push('状態: ' + item.rank);
+    if (item.conditions && item.conditions.length > 0) parts.push('状態詳細: ' + item.conditions.join('・'));
     if (item.images.length > 0) parts.push('画像: ' + item.images.length + '枚添付');
     return parts.join(NL);
   });
