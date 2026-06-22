@@ -293,32 +293,14 @@
       <input type="text" id="serial-watch" placeholder="例：F123456">
     </div>
     <div class="field">
-      <label>サイズ</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-        <div><input type="number" id="size-w" placeholder="縦cm" step="0.1"></div>
-        <div><input type="number" id="size-h" placeholder="横cm" step="0.1"></div>
-        <div><input type="number" id="size-g" placeholder="重g" step="0.1"></div>
-      </div>
-    </div>
-    <div class="field">
-      <label>真贋（OK・NG）</label>
-      <div style="display:flex;gap:8px">
-        <button class="rank-btn" data-auth="OK" onclick="selectAuth(this)" style="flex:1">OK</button>
-        <button class="rank-btn" data-auth="NG" onclick="selectAuth(this)" style="flex:1">NG</button>
-      </div>
+      <label>ケースサイズ（横幅）</label>
+      <input type="text" id="size-w" placeholder="例：40mm">
     </div>
     <div class="field">
       <label>ターボテスター</label>
       <div style="display:flex;gap:8px">
         <button class="rank-btn" data-turbo="済" onclick="selectTurbo(this)" style="flex:1">済</button>
         <button class="rank-btn" data-turbo="不可" onclick="selectTurbo(this)" style="flex:1">不可</button>
-      </div>
-    </div>
-    <div class="field">
-      <label>ニオイ</label>
-      <div style="display:flex;gap:8px">
-        <button class="rank-btn" data-smell="有" onclick="selectSmell(this)" style="flex:1">有</button>
-        <button class="rank-btn" data-smell="無" onclick="selectSmell(this)" style="flex:1">無</button>
       </div>
     </div>
     <div class="field">
@@ -338,7 +320,8 @@
       <select id="kinshu">
         <option value="">選択してください</option>
         <option>K24</option><option>K18</option><option>K14</option><option>K10</option>
-        <option>Pt950</option><option>Pt900</option><option>Pt850</option><option>不明</option>
+        <option>Pt1000</option><option>Pt950</option><option>Pt900</option><option>Pt850</option>
+        <option>インゴットK</option><option>インゴットP</option><option>コンビ</option><option>不明</option>
       </select>
     </div>
     <div class="field">
@@ -346,7 +329,7 @@
       <input type="number" id="weight-metal" placeholder="例：15.2" step="0.01">
     </div>
     <div class="field">
-      <label>比重値</label>
+      <label>比重値 <span style='color:var(--danger);font-size:11px'>※数値入力 or「できなかった」を選択</span></label>
       <div style="display:flex;gap:8px;align-items:center">
         <input type="number" id="hiju-val" placeholder="数値" step="0.01" style="flex:1">
         <button class="rank-btn" id="hiju-ng-btn" data-hiju="できなかった" onclick="toggleHijuNG(this)" style="flex:1;font-size:12px">できなかった</button>
@@ -380,14 +363,12 @@
       <div style="display:flex;gap:8px">
         <button class="rank-btn" data-dia="OK" onclick="selectDia(this)" style="flex:1">OK</button>
         <button class="rank-btn" data-dia="NG" onclick="selectDia(this)" style="flex:1">NG</button>
-        <button class="rank-btn" data-dia="不可" onclick="selectDia(this)" style="flex:1">不可</button>
       </div>
     </div>
     <div class="field">
-      <label>ct（チェーン / トップ / 脇石）</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-        <input type="number" id="ct-chain" placeholder="チェーン" step="0.01">
-        <input type="number" id="ct-top" placeholder="トップ" step="0.01">
+      <label>ct（主石 / 脇石）</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input type="number" id="ct-top" placeholder="主石" step="0.01">
         <input type="number" id="ct-waki" placeholder="脇石" step="0.01">
       </div>
     </div>
@@ -511,8 +492,8 @@ function selectCat(btn) {
   currentImages = [];
   document.getElementById('img-preview').innerHTML = '';
   document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
-  ['brand-watch','name-watch','model-watch','serial-watch','size-w','size-h','size-g','accessories-watch','note-watch',
-   'kinshu','weight-metal','hiju-val','ct-chain','ct-top','ct-waki'].forEach(id => {
+  ['brand-watch','name-watch','model-watch','serial-watch','size-w','accessories-watch','note-watch',
+   'kinshu','weight-metal','hiju-val','ct-top','ct-waki'].forEach(id => {
     const el = document.getElementById(id); if (el) { el.value = ''; el.disabled = false; }
   });
   document.querySelectorAll('.check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
@@ -574,8 +555,8 @@ function toggleHijuNG(btn) {
 
 function selectRank(btn) {
   document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
-  ['brand-watch','name-watch','model-watch','serial-watch','size-w','size-h','size-g','accessories-watch','note-watch',
-   'kinshu','weight-metal','hiju-val','ct-chain','ct-top','ct-waki'].forEach(id => {
+  ['brand-watch','name-watch','model-watch','serial-watch','size-w','accessories-watch','note-watch',
+   'kinshu','weight-metal','hiju-val','ct-top','ct-waki'].forEach(id => {
     const el = document.getElementById(id); if (el) { el.value = ''; el.disabled = false; }
   });
   btn.classList.add('active');
@@ -628,7 +609,7 @@ function addToCart() {
     serial = document.getElementById('serial-jewelry').value.trim();
     metal = document.getElementById('metal').value;
   }
-  if (!brand) return showToast('ブランドを選択してください');
+  if (!brand && currentCat !== '貴金属' && currentCat !== '時計') return showToast('ブランドを選択してください');
   // collect watch fields
   let watchData = {};
   if (currentCat === '時計') {
@@ -637,12 +618,8 @@ function addToCart() {
       name: document.getElementById('name-watch').value.trim(),
       model: document.getElementById('model-watch').value.trim(),
       serial: document.getElementById('serial-watch').value.trim(),
-      sizeW: document.getElementById('size-w').value,
-      sizeH: document.getElementById('size-h').value,
-      sizeG: document.getElementById('size-g').value,
-      auth: document.querySelector('[data-auth].active')?.dataset.auth || '',
+      caseSize: document.getElementById('size-w').value,
       turbo: document.querySelector('[data-turbo].active')?.dataset.turbo || '',
-      smell: document.querySelector('[data-smell].active')?.dataset.smell || '',
       accessories: document.getElementById('accessories-watch').value.trim(),
       note: document.getElementById('note-watch').value.trim(),
     };
@@ -651,6 +628,8 @@ function addToCart() {
   let metalData = {};
   if (currentCat === '貴金属') {
     const hijuNG = document.getElementById('hiju-ng-btn').classList.contains('active');
+    const hijuVal = document.getElementById('hiju-val').value;
+    if (!hijuNG && !hijuVal) return showToast('比重値を入力するか「できなかった」を選択してください');
     metalData = {
       kinshu: document.getElementById('kinshu').value,
       weight: document.getElementById('weight-metal').value,
@@ -717,8 +696,8 @@ function resetItem() {
   document.getElementById('item-actions').style.display = 'none';
   document.getElementById('img-preview').innerHTML = '';
   document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
-  ['brand-watch','name-watch','model-watch','serial-watch','size-w','size-h','size-g','accessories-watch','note-watch',
-   'kinshu','weight-metal','hiju-val','ct-chain','ct-top','ct-waki'].forEach(id => {
+  ['brand-watch','name-watch','model-watch','serial-watch','size-w','accessories-watch','note-watch',
+   'kinshu','weight-metal','hiju-val','ct-top','ct-waki'].forEach(id => {
     const el = document.getElementById(id); if (el) { el.value = ''; el.disabled = false; }
   });
   document.querySelectorAll('.check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
@@ -761,10 +740,8 @@ async function submitToAsana() {
       if (w.name) parts.push('商品名: ' + w.name);
       if (w.model) parts.push('型番: ' + w.model);
       if (w.serial) parts.push('シリアル: ' + w.serial);
-      if (w.sizeW || w.sizeH || w.sizeG) parts.push('サイズ: 縦' + (w.sizeW||'-') + 'cm 横' + (w.sizeH||'-') + 'cm 重' + (w.sizeG||'-') + 'g');
-      if (w.auth) parts.push('真贋: ' + w.auth);
+      if (w.caseSize) parts.push('ケースサイズ: ' + w.caseSize);
       if (w.turbo) parts.push('ターボテスター: ' + w.turbo);
-      if (w.smell) parts.push('ニオイ: ' + w.smell);
       if (w.accessories) parts.push('付属品: ' + w.accessories);
       if (w.note) parts.push('特記: ' + w.note);
     }
@@ -777,7 +754,7 @@ async function submitToAsana() {
       if (m.stone) parts.push('主石・脇石: ' + m.stone);
       if (m.gem) parts.push('ジェムテスター: ' + m.gem);
       if (m.dia) parts.push('ダイヤテスター: ' + m.dia);
-      const ct = [m.ctChain ? 'チェーン'+m.ctChain+'ct' : '', m.ctTop ? 'トップ'+m.ctTop+'ct' : '', m.ctWaki ? '脇石'+m.ctWaki+'ct' : ''].filter(Boolean).join(' ');
+      const ct = [m.ctTop ? '主石'+m.ctTop+'ct' : '', m.ctWaki ? '脇石'+m.ctWaki+'ct' : ''].filter(Boolean).join(' ');
       if (ct) parts.push('ct: ' + ct);
     }
     if (item.rank) parts.push('状態: ' + item.rank);
