@@ -710,7 +710,7 @@ function addToCart() {
   }
   const rankBtn = document.querySelector('[data-rank].active');
   const rank = rankBtn ? rankBtn.dataset.rank : '';
-  const conditions = Array.from(document.querySelectorAll('.check-item.checked')).map(el => el.dataset.value);
+  const conditions = Array.from(document.querySelectorAll('.check-item.checked:not(.watch-acc)')).map(el => el.dataset.value);
   cart.push({ cat: currentCat, brand, productName, serial, metal, rank, conditions, watchData, metalData, images: [...currentImages] });
   renderCart();
   resetItem();
@@ -798,13 +798,14 @@ async function submitToAsana() {
 
   const NL = String.fromCharCode(10);
   const itemTexts = cart.map((item, i) => {
-    const parts = [(i + 1) + ':', 'カテゴリ: ' + item.cat, 'ブランド: ' + item.brand];
+    const parts = [(i + 1) + ':', 'カテゴリ: ' + item.cat];
+    if (item.brand) parts.push('ブランド: ' + item.brand);
     if (item.productName) parts.push('商品名: ' + item.productName);
     if (item.serial) parts.push('型番: ' + item.serial);
     if (item.metal) parts.push('金属種類: ' + item.metal);
     if (item.cat === '時計' && item.watchData) {
       const w = item.watchData;
-      if (w.brand) parts.push('ブランド: ' + w.brand); // 空の場合スキップ済み
+      if (w.brand) parts.push('ブランド: ' + w.brand);
       if (w.name) parts.push('商品名: ' + w.name);
       if (w.model) parts.push('型番: ' + w.model);
       if (w.serial) parts.push('シリアル: ' + w.serial);
@@ -832,10 +833,9 @@ async function submitToAsana() {
   });
   const repeaterBtn = document.querySelector('[data-repeater].active');
   const repeater = repeaterBtn ? repeaterBtn.dataset.repeater : '';
-  const lines = ['<start>', '店舗: ' + store, '起票者: ' + requester, '総点数: ' + totalItems + '点', repeater ? 'リピーター: ' + repeater : '', '']
-    .concat(itemTexts)
-    .concat(['', '<end>'])
-    .join(NL);
+  const headerLines = ['<start>', '店舗: ' + store, '起票者: ' + requester, '総点数: ' + totalItems + '点'];
+  if (repeater) headerLines.push('リピーター: ' + repeater);
+  const lines = headerLines.join(NL) + NL + NL + itemTexts.join(NL + NL) + NL + NL + '<end>';
 
   const taskName = `【査定依頼】${store} / ${requester} (${cart.length}点)`;
 
