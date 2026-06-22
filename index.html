@@ -500,7 +500,8 @@ function selectCat(btn) {
   currentCat = btn.dataset.cat;
   currentImages = [];
   document.getElementById('img-preview').innerHTML = '';
-  document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('[data-rank]').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('[data-jsei],[data-stone],[data-gem],[data-dia],[data-turbo],[data-auth],[data-smell]').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('#fields-watch .check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
   ['brand-watch','name-watch','model-watch','serial-watch','size-w','note-watch',
    'kinshu','weight-metal','hiju-val','ct-top','ct-waki'].forEach(id => {
@@ -571,7 +572,8 @@ function toggleHijuNG(btn) {
 }
 
 function selectRank(btn) {
-  document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('[data-rank]').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('[data-jsei],[data-stone],[data-gem],[data-dia],[data-turbo],[data-auth],[data-smell]').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('#fields-watch .check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
   ['brand-watch','name-watch','model-watch','serial-watch','size-w','note-watch',
    'kinshu','weight-metal','hiju-val','ct-top','ct-waki'].forEach(id => {
@@ -713,7 +715,8 @@ function resetItem() {
   document.getElementById('field-images').style.display = 'none';
   document.getElementById('item-actions').style.display = 'none';
   document.getElementById('img-preview').innerHTML = '';
-  document.querySelectorAll('.rank-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('[data-rank]').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('[data-jsei],[data-stone],[data-gem],[data-dia],[data-turbo],[data-auth],[data-smell]').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('#fields-watch .check-item').forEach(b => { b.classList.remove('checked'); b.querySelector('.check-icon').textContent = ''; });
   ['brand-watch','name-watch','model-watch','serial-watch','size-w','note-watch',
    'kinshu','weight-metal','hiju-val','ct-top','ct-waki'].forEach(id => {
@@ -858,12 +861,15 @@ function showModal(msg) {
   const overlay = document.createElement('div');
   overlay.id = 'modal-overlay';
   overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px';
-  overlay.innerHTML = '<div style="background:#fff;border-radius:12px;padding:24px;max-width:280px;width:100%;text-align:center">' +
-    '<div style="font-size:28px;margin-bottom:12px">⚠️</div>' +
-    '<div style="font-size:16px;font-weight:700;color:#1A1916;margin-bottom:8px">預かり案件</div>' +
-    '<div style="font-size:14px;color:#7A7770;margin-bottom:20px">' + msg + '</div>' +
-    '<button onclick="document.getElementById('modal-overlay').remove()" style="background:#2B4C3F;color:#fff;border:none;border-radius:8px;padding:12px 32px;font-size:15px;font-weight:700;cursor:pointer;width:100%">OK</button>' +
-    '</div>';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:24px;max-width:280px;width:100%;text-align:center';
+  box.innerHTML = '<div style="font-size:28px;margin-bottom:12px">&#9888;</div><div style="font-size:16px;font-weight:700;color:#1A1916;margin-bottom:8px">&#39640;&#12363;&#12426;&#26696;&#20214;</div><div style="font-size:14px;color:#7A7770;margin-bottom:20px">' + msg + '</div>';
+  const btn = document.createElement('button');
+  btn.textContent = 'OK';
+  btn.style.cssText = 'background:#2B4C3F;color:#fff;border:none;border-radius:8px;padding:12px 32px;font-size:15px;font-weight:700;cursor:pointer;width:100%';
+  btn.onclick = function() { overlay.remove(); };
+  box.appendChild(btn);
+  overlay.appendChild(box);
   document.body.appendChild(overlay);
 }
 
