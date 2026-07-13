@@ -684,7 +684,7 @@ async function submitAzukariItem() {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({ data: { name: taskName, notes, memberships } })
+      body: JSON.stringify({ data: { name: taskName, notes, memberships, assignee: selectedMember ? selectedMember.gid : null } })
     });
     const taskData = await taskRes.json();
     if (!taskRes.ok) throw new Error(taskData.errors?.[0]?.message || '作成失敗');
@@ -942,7 +942,7 @@ async function submitToAsana() {
           name: taskName,
           notes: lines,
           projects: [ASANA_PROJECT_ID],
-          followers: selectedMember ? [selectedMember.gid] : []
+          assignee: selectedMember ? selectedMember.gid : null
         } })
     });
     const taskData = await taskRes.json();
