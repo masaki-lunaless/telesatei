@@ -942,7 +942,7 @@ async function submitToAsana() {
       const taskRes = await fetch('https://app.asana.com/api/1.0/tasks', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${ASANA_PAT}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ data: { name: taskName, notes: lines, projects: [ASANA_PROJECT_ID], assignee: selectedMember ? selectedMember.gid : null } })
+        body: JSON.stringify({ data: { name: taskName, notes: lines, projects: [ASANA_PROJECT_ID], followers: selectedMember ? [selectedMember.gid] : [] } })
       });
       const taskData = await taskRes.json();
       if (!taskRes.ok) throw new Error(taskData.errors?.[0]?.message || '作成失敗');
@@ -986,13 +986,19 @@ async function submitToAsana() {
         body: JSON.stringify({ data: {
           name: azukariTaskName,
           notes: azukariNotes,
-          memberships: [{ project: ASANA_PROJECT_ID, section: AZUKARI_SECTION_ID }],
-          assignee: selectedMember ? selectedMember.gid : null
+          projects: [ASANA_PROJECT_ID],
+          followers: selectedMember ? [selectedMember.gid] : []
         }})
       });
       const azukariData = await azukariRes.json();
       if (azukariRes.ok) {
         const azukariTaskId = azukariData.data.gid;
+        // セクションに移動
+        await fetch(`https://app.asana.com/api/1.0/sections/${AZUKARI_SECTION_ID}/addTask`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${ASANA_PAT}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ data: { task: azukariTaskId } })
+        });
         const allAzukariImages = azukariCart.flatMap(item => item.images);
         for (const img of allAzukariImages) {
           const fd = new FormData();
