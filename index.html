@@ -354,6 +354,32 @@
         <button class="rank-btn" data-stone="両方" onclick="selectStone(this)">両方</button>
       </div>
     </div>
+    <div class="field" id="field-stone-main" style="display:none">
+      <label>主石 種類</label>
+      <select id="stone-main-select">
+        <option value="">選択してください</option>
+        <option>ダイヤモンド</option><option>ルビー</option><option>サファイア</option>
+        <option>エメラルド</option><option>パール</option><option>アクアマリン</option>
+        <option>アメジスト</option><option>トパーズ</option><option>オパール</option>
+        <option>ターコイズ</option><option>ガーネット</option><option>ペリドット</option>
+        <option>タンザナイト</option><option>スピネル</option><option>ムーンストーン</option>
+        <option>アレキサンドライト</option><option>ジルコン</option><option>コーラル</option>
+        <option>ラピスラズリ</option><option>不明</option>
+      </select>
+    </div>
+    <div class="field" id="field-stone-waki" style="display:none">
+      <label>脇石 種類</label>
+      <select id="stone-waki-select">
+        <option value="">選択してください</option>
+        <option>ダイヤモンド</option><option>ルビー</option><option>サファイア</option>
+        <option>エメラルド</option><option>パール</option><option>アクアマリン</option>
+        <option>アメジスト</option><option>トパーズ</option><option>オパール</option>
+        <option>ターコイズ</option><option>ガーネット</option><option>ペリドット</option>
+        <option>タンザナイト</option><option>スピネル</option><option>ムーンストーン</option>
+        <option>アレキサンドライト</option><option>ジルコン</option><option>コーラル</option>
+        <option>ラピスラズリ</option><option>不明</option>
+      </select>
+    </div>
     <div class="field" id="field-gem" style="display:none">
       <label>ジェムテスター（石があれば）</label>
       <div style="display:flex;gap:8px">
@@ -425,6 +451,11 @@
     <div class="empty-cart">まだ商品がありません</div>
   </div>
   <hr class="divider">
+  <div class="card-title" style="margin-top:4px;color:var(--danger)">預かり対応商品</div>
+  <div class="cart-list" id="azukari-list">
+    <div class="empty-cart">預かり品なし</div>
+  </div>
+  <hr class="divider">
   <button class="btn btn-primary" id="submit-btn" onclick="submitToAsana()" disabled>
     Asanaに送信
   </button>
@@ -440,16 +471,13 @@
 <script>
 // ===== CONFIG =====
 const ASANA_PROJECT_ID = '1215896672136706';
-const STORE_MAP = {
-  // 店舗アカウント作成後にここに追加
-  // '成田店': 'ユーザーID',
-};
+const AZUKARI_SECTION_ID = '1215896672136707';
 let ASANA_PAT = '';
 // ==================
 let cart = [];
+let azukariCart = [];
 let currentCat = null;
 let currentImages = [];
-let azukariSectionId = null;
 let projectMembers = []; // {gid, name}
 let selectedMember = null; // {gid, name}
 // --- PAT management ---
@@ -472,7 +500,6 @@ function savePat() {
 }
 function showApp() {
   document.getElementById('main-app').style.display = 'block';
-  fetchAzukariSection();
   fetchProjectMembers();
 }
 async function fetchProjectMembers() {
@@ -509,17 +536,6 @@ function selectStore(gid, name) {
 }
 function closeStoreDrop() {
   setTimeout(() => document.getElementById('store-drop').classList.remove('open'), 150);
-}
-async function fetchAzukariSection() {
-  if (!ASANA_PAT) return;
-  try {
-    const res = await fetch(`https://app.asana.com/api/1.0/projects/${ASANA_PROJECT_ID}/sections`, {
-      headers: { 'Authorization': `Bearer ${ASANA_PAT}`, 'Accept': 'application/json' }
-    });
-    const data = await res.json();
-    const sec = (data.data || []).find(s => s.name === '検査預かり');
-    if (sec) azukariSectionId = sec.gid;
-  } catch(e) { /* サイレントフェイル */ }
 }
 function resetPat() {
   if (!confirm('APIキーをリセットしますか？')) return;
@@ -610,24 +626,21 @@ function showAzukariModal() {
   overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px';
   const box = document.createElement('div');
   box.style.cssText = 'background:#fff;border-radius:12px;padding:24px;max-width:280px;width:100%;text-align:center';
-  box.innerHTML = '<div style="font-size:28px;margin-bottom:12px">&#9888;</div><div style="font-size:16px;font-weight:700;color:#1A1916;margin-bottom:8px">預かり品</div><div style="font-size:14px;color:#7A7770;margin-bottom:20px">磁性あり。この商品を「あずかり」としてAsanaに即時送信します。</div><div id="azukari-sending" style="display:none;font-size:13px;color:#7A7770;margin-bottom:12px">送信中...</div>';
+  box.innerHTML = '<div style="font-size:28px;margin-bottom:12px">&#9888;</div><div style="font-size:16px;font-weight:700;color:#1A1916;margin-bottom:8px">預かり品</div><div style="font-size:14px;color:#7A7770;margin-bottom:20px">磁性あり。この商品を「預かり対応商品」に追加します。</div>';
   const btnRow = document.createElement('div');
   btnRow.style.cssText = 'display:flex;gap:8px';
   const cancelBtn = document.createElement('button');
   cancelBtn.textContent = 'キャンセル';
   cancelBtn.style.cssText = 'flex:1;background:#F0EDE8;color:#7A7770;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer';
   cancelBtn.onclick = function() {
-    // 磁性を「無」に戻す
     document.querySelectorAll('[data-jsei]').forEach(b => b.classList.remove('active'));
     overlay.remove();
   };
   const okBtn = document.createElement('button');
-  okBtn.textContent = 'Asanaに送信';
+  okBtn.textContent = '預かりに追加';
   okBtn.style.cssText = 'flex:1;background:#2B4C3F;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer';
-  okBtn.onclick = async function() {
-    okBtn.disabled = true; cancelBtn.disabled = true;
-    document.getElementById('azukari-sending').style.display = 'block';
-    await submitAzukariItem();
+  okBtn.onclick = function() {
+    addToAzukariCart();
     overlay.remove();
   };
   btnRow.appendChild(cancelBtn);
@@ -636,11 +649,7 @@ function showAzukariModal() {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 }
-async function submitAzukariItem() {
-  const store = selectedMember ? selectedMember.name : '未選択';
-  const requester = document.getElementById('requester').value.trim() || '未入力';
-  const NL = String.fromCharCode(10);
-  // 現在の貴金属フォームから収集
+function addToAzukariCart() {
   const hijuNG = document.getElementById('hiju-ng-btn').classList.contains('active');
   const metalData = {
     kinshu: document.getElementById('kinshu').value,
@@ -648,6 +657,8 @@ async function submitAzukariItem() {
     hiju: hijuNG ? 'できなかった' : document.getElementById('hiju-val').value,
     jsei: '有',
     stone: document.querySelector('[data-stone].active')?.dataset.stone || '',
+    stoneMain: document.getElementById('stone-main-select').value,
+    stoneWaki: document.getElementById('stone-waki-select').value,
     gem: document.querySelector('[data-gem].active')?.dataset.gem || '',
     dia: document.querySelector('[data-dia].active')?.dataset.dia || '',
     ctTop: document.getElementById('ct-top').value,
@@ -655,64 +666,53 @@ async function submitAzukariItem() {
   };
   const rank = document.querySelector('[data-rank].active')?.dataset.rank || '';
   const conditions = Array.from(document.querySelectorAll('.check-item.checked:not(.watch-acc)')).map(el => el.dataset.value);
-  const parts = ['カテゴリ: 貴金属', '⚠️ 磁性: 有 → 預かり品'];
-  if (metalData.kinshu) parts.push('金種: ' + metalData.kinshu);
-  if (metalData.weight) parts.push('総重量: ' + metalData.weight + 'g');
-  if (metalData.hiju) parts.push('比重値: ' + metalData.hiju);
-  if (metalData.stone) parts.push('主石・脇石: ' + metalData.stone);
-  if (metalData.gem) parts.push('ジェムテスター: ' + metalData.gem);
-  if (metalData.dia) parts.push('ダイヤテスター: ' + metalData.dia);
-  const ct = [metalData.ctTop ? '主石'+metalData.ctTop+'ct' : '', metalData.ctWaki ? '脇石'+metalData.ctWaki+'ct' : ''].filter(Boolean).join(' ');
-  if (ct) parts.push('ct: ' + ct);
-  if (rank) parts.push('状態: ' + rank);
-  if (conditions.length > 0) parts.push('状態詳細: ' + conditions.join('・'));
-  if (currentImages.length > 0) parts.push('画像: ' + currentImages.length + '枚添付');
-  const repeaterBtn = document.querySelector('[data-repeater].active');
-  const repeater = repeaterBtn ? repeaterBtn.dataset.repeater : '';
-  const headerLines = ['<start>', '店舗: ' + store, '起票者: ' + requester, '【預かり品】'];
-  if (repeater) headerLines.push('リピーター: ' + repeater);
-  const notes = headerLines.join(NL) + NL + NL + parts.join(NL) + NL + NL + '<end>';
-  const taskName = `【預かり】${store} / ${requester} 貴金属(磁性有)`;
-  try {
-    const memberships = azukariSectionId
-      ? [{ project: ASANA_PROJECT_ID, section: azukariSectionId }]
-      : [{ project: ASANA_PROJECT_ID }];
-    const taskRes = await fetch('https://app.asana.com/api/1.0/tasks', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${ASANA_PAT}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ data: { name: taskName, notes, memberships, assignee: selectedMember ? selectedMember.gid : null } })
-    });
-    const taskData = await taskRes.json();
-    if (!taskRes.ok) throw new Error(taskData.errors?.[0]?.message || '作成失敗');
-    const taskId = taskData.data.gid;
-    for (const img of currentImages) {
-      const formData = new FormData();
-      formData.append('file', img.file, img.file.name);
-      await fetch(`https://app.asana.com/api/1.0/tasks/${taskId}/attachments`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${ASANA_PAT}` },
-        body: formData
-      });
-    }
-    resetItem();
-    showToast('預かり品をAsanaに送信しました');
-  } catch(e) {
-    showToast('エラー: ' + e.message);
-    // 磁性ボタンを無効に戻す
-    document.querySelectorAll('[data-jsei]').forEach(b => b.classList.remove('active'));
-  }
+  azukariCart.push({ metalData, rank, conditions, images: [...currentImages] });
+  renderAzukariList();
+  resetItem();
+  updateSubmitBtn();
+  showToast(`預かり品 ${azukariCart.length} 点を追加しました`);
+}
+function renderAzukariList() {
+  const list = document.getElementById('azukari-list');
+  if (azukariCart.length === 0) { list.innerHTML = '<div class="empty-cart">預かり品なし</div>'; return; }
+  list.innerHTML = azukariCart.map((item, i) => {
+    const m = item.metalData;
+    return `<div class="cart-item" style="border-left:3px solid var(--danger)">
+      <div class="cart-item-info">
+        <div class="cart-item-num" style="color:var(--danger)">預 ${i + 1}</div>
+        <div class="cart-item-desc">
+          貴金属（磁性有）
+          ${m.kinshu ? `<br>${m.kinshu}` : ''}
+          ${m.weight ? ` ${m.weight}g` : ''}
+          ${m.hiju ? `<br>比重: ${m.hiju}` : ''}
+          ${item.rank ? `<br>状態: ${item.rank}` : ''}
+          ${item.conditions && item.conditions.length > 0 ? `<br><span style="color:var(--sub);font-size:12px">${item.conditions.join('・')}</span>` : ''}
+        </div>
+        ${item.images.length > 0 ? `<div class="cart-item-img">📷 画像 ${item.images.length}枚</div>` : ''}
+      </div>
+      <button class="del-btn" onclick="removeFromAzukari(${i})">×</button>
+    </div>`;
+  }).join('');
+}
+function removeFromAzukari(i) {
+  azukariCart.splice(i, 1);
+  renderAzukariList();
+  updateSubmitBtn();
 }
 function selectStone(btn) {
   document.querySelectorAll('[data-stone]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  const hasStone = btn.dataset.stone !== 'なし';
+  const v = btn.dataset.stone;
+  const hasMain = v === '主石のみ' || v === '両方';
+  const hasWaki = v === '脇石のみ' || v === '両方';
+  const hasStone = v !== 'なし';
+  document.getElementById('field-stone-main').style.display = hasMain ? 'block' : 'none';
+  document.getElementById('field-stone-waki').style.display = hasWaki ? 'block' : 'none';
   document.getElementById('field-gem').style.display = hasStone ? 'block' : 'none';
   document.getElementById('field-dia').style.display = hasStone ? 'block' : 'none';
   document.getElementById('field-ct').style.display = hasStone ? 'block' : 'none';
+  if (!hasMain) document.getElementById('stone-main-select').value = '';
+  if (!hasWaki) document.getElementById('stone-waki-select').value = '';
 }
 function selectGem(btn) {
   document.querySelectorAll('[data-gem]').forEach(b => b.classList.remove('active'));
@@ -805,6 +805,8 @@ function addToCart() {
       hiju: hijuNG ? 'できなかった' : document.getElementById('hiju-val').value,
       jsei: document.querySelector('[data-jsei].active')?.dataset.jsei || '',
       stone: document.querySelector('[data-stone].active')?.dataset.stone || '',
+      stoneMain: document.getElementById('stone-main-select').value,
+      stoneWaki: document.getElementById('stone-waki-select').value,
       gem: document.querySelector('[data-gem].active')?.dataset.gem || '',
       dia: document.querySelector('[data-dia].active')?.dataset.dia || '',
       ctTop: document.getElementById('ct-top').value,
@@ -856,7 +858,8 @@ function resetItem() {
   document.getElementById('fields-jewelry').style.display = 'none';
   document.getElementById('fields-watch').style.display = 'none';
   document.getElementById('fields-metal').style.display = 'none';
-  ['field-gem','field-dia','field-ct'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
+  ['field-gem','field-dia','field-ct','field-stone-main','field-stone-waki'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
+  ['stone-main-select','stone-waki-select'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.getElementById('field-condition').style.display = 'none';
   document.getElementById('field-images').style.display = 'none';
   document.getElementById('item-actions').style.display = 'none';
@@ -874,7 +877,7 @@ function resetItem() {
 }
 function updateSubmitBtn() {
   const req = document.getElementById('requester').value.trim();
-  document.getElementById('submit-btn').disabled = !(selectedMember && req && cart.length > 0);
+  document.getElementById('submit-btn').disabled = !(selectedMember && req && (cart.length > 0 || azukariCart.length > 0));
 }
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('requester').addEventListener('input', updateSubmitBtn);
@@ -885,7 +888,7 @@ async function submitToAsana() {
   const store = selectedMember ? selectedMember.name : '';
   const requester = document.getElementById('requester').value.trim();
   const totalItems = document.getElementById('total-items').value || cart.length;
-  if (!store || !requester || cart.length === 0) return;
+  if (!store || !requester || (cart.length === 0 && azukariCart.length === 0)) return;
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
   btn.textContent = '送信中...';
@@ -914,6 +917,8 @@ async function submitToAsana() {
       if (m.hiju) parts.push('比重値: ' + m.hiju);
       if (m.jsei) parts.push('磁性: ' + m.jsei);
       if (m.stone) parts.push('主石・脇石: ' + m.stone);
+      if (m.stoneMain) parts.push('主石種類: ' + m.stoneMain);
+      if (m.stoneWaki) parts.push('脇石種類: ' + m.stoneWaki);
       if (m.gem) parts.push('ジェムテスター: ' + m.gem);
       if (m.dia) parts.push('ダイヤテスター: ' + m.dia);
       const ct = [m.ctTop ? '主石'+m.ctTop+'ct' : '', m.ctWaki ? '脇石'+m.ctWaki+'ct' : ''].filter(Boolean).join(' ');
@@ -931,36 +936,78 @@ async function submitToAsana() {
   const lines = headerLines.join(NL) + NL + NL + itemTexts.join(NL + NL) + NL + NL + '<end>';
   const taskName = `【査定依頼】${store} / ${requester} (${cart.length}点)`;
   try {
-    const taskRes = await fetch('https://app.asana.com/api/1.0/tasks', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${ASANA_PAT}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ data: {
-          name: taskName,
-          notes: lines,
-          projects: [ASANA_PROJECT_ID],
-          assignee: selectedMember ? selectedMember.gid : null
-        } })
-    });
-    const taskData = await taskRes.json();
-    if (!taskRes.ok) throw new Error(taskData.errors?.[0]?.message || '作成失敗');
-    const taskId = taskData.data.gid;
-    const allImages = cart.flatMap(item => item.images);
-    for (const img of allImages) {
-      const formData = new FormData();
-      formData.append('file', img.file, img.file.name);
-      await fetch(`https://app.asana.com/api/1.0/tasks/${taskId}/attachments`, {
+    let mainTaskId = null;
+    // 通常カートのタスク作成
+    if (cart.length > 0) {
+      const taskRes = await fetch('https://app.asana.com/api/1.0/tasks', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${ASANA_PAT}` },
-        body: formData
+        headers: { 'Authorization': `Bearer ${ASANA_PAT}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ data: { name: taskName, notes: lines, projects: [ASANA_PROJECT_ID], assignee: selectedMember ? selectedMember.gid : null } })
       });
+      const taskData = await taskRes.json();
+      if (!taskRes.ok) throw new Error(taskData.errors?.[0]?.message || '作成失敗');
+      mainTaskId = taskData.data.gid;
+      const allImages = cart.flatMap(item => item.images);
+      for (const img of allImages) {
+        const formData = new FormData();
+        formData.append('file', img.file, img.file.name);
+        await fetch(`https://app.asana.com/api/1.0/tasks/${mainTaskId}/attachments`, {
+          method: 'POST', headers: { 'Authorization': `Bearer ${ASANA_PAT}` }, body: formData
+        });
+      }
+    }
+    // 預かり品タスクを別途作成
+    if (azukariCart.length > 0) {
+      const NL2 = String.fromCharCode(10);
+      const azukariTexts = azukariCart.map((item, i) => {
+        const m = item.metalData;
+        const parts = [(i+1)+':', 'カテゴリ: 貴金属', '⚠️ 磁性: 有'];
+        if (m.kinshu) parts.push('金種: ' + m.kinshu);
+        if (m.weight) parts.push('総重量: ' + m.weight + 'g');
+        if (m.hiju) parts.push('比重値: ' + m.hiju);
+        if (m.stone) parts.push('主石・脇石: ' + m.stone);
+        if (m.stoneMain) parts.push('主石種類: ' + m.stoneMain);
+        if (m.stoneWaki) parts.push('脇石種類: ' + m.stoneWaki);
+        if (m.gem) parts.push('ジェムテスター: ' + m.gem);
+        if (m.dia) parts.push('ダイヤテスター: ' + m.dia);
+        const ct = [m.ctTop?'主石'+m.ctTop+'ct':'', m.ctWaki?'脇石'+m.ctWaki+'ct':''].filter(Boolean).join(' ');
+        if (ct) parts.push('ct: ' + ct);
+        if (item.rank) parts.push('状態: ' + item.rank);
+        if (item.conditions.length > 0) parts.push('状態詳細: ' + item.conditions.join('・'));
+        if (item.images.length > 0) parts.push('画像: ' + item.images.length + '枚添付');
+        return parts.join(NL2);
+      });
+      const azukariHeader = ['<start>', '店舗: ' + store, '起票者: ' + requester, '【検査預かり】'].join(NL2);
+      const azukariNotes = azukariHeader + NL2 + NL2 + azukariTexts.join(NL2 + NL2) + NL2 + NL2 + '<end>';
+      const azukariTaskName = `【検査預かり】${store} / ${requester} (${azukariCart.length}点)`;
+      const azukariRes = await fetch('https://app.asana.com/api/1.0/tasks', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${ASANA_PAT}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ data: {
+          name: azukariTaskName,
+          notes: azukariNotes,
+          memberships: [{ project: ASANA_PROJECT_ID, section: AZUKARI_SECTION_ID }],
+          assignee: selectedMember ? selectedMember.gid : null
+        }})
+      });
+      const azukariData = await azukariRes.json();
+      if (azukariRes.ok) {
+        const azukariTaskId = azukariData.data.gid;
+        const allAzukariImages = azukariCart.flatMap(item => item.images);
+        for (const img of allAzukariImages) {
+          const fd = new FormData();
+          fd.append('file', img.file, img.file.name);
+          await fetch(`https://app.asana.com/api/1.0/tasks/${azukariTaskId}/attachments`, {
+            method: 'POST', headers: { 'Authorization': `Bearer ${ASANA_PAT}` }, body: fd
+          });
+        }
+      }
     }
     document.getElementById('submit-result').classList.add('show');
-    document.getElementById('submit-task-link').innerHTML =
-      `タスクID: ${taskId}<br><a href="https://app.asana.com/0/${ASANA_PROJECT_ID}/${taskId}" target="_blank" style="color:var(--accent)">Asanaで確認する →</a>`;
+    const linkId = mainTaskId;
+    document.getElementById('submit-task-link').innerHTML = linkId
+      ? `タスクID: ${linkId}<br><a href="https://app.asana.com/0/${ASANA_PROJECT_ID}/${linkId}" target="_blank" style="color:var(--accent)">Asanaで確認する →</a>`
+      : `送信完了（預かり品のみ）`;
     document.getElementById('section-header').style.display = 'none';
     document.getElementById('section-item').style.display = 'none';
     document.getElementById('section-cart').style.display = 'none';
@@ -972,6 +1019,8 @@ async function submitToAsana() {
 }
 function resetAll() {
   cart = [];
+  azukariCart = [];
+  renderAzukariList();
   currentCat = null;
   currentImages = [];
   selectedMember = null;
