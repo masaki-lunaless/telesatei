@@ -339,13 +339,6 @@
       </div>
     </div>
     <div class="field">
-      <label>磁性</label>
-      <div style="display:flex;gap:8px">
-        <button class="rank-btn" data-jsei="有" onclick="selectJsei(this)" style="flex:1">有</button>
-        <button class="rank-btn" data-jsei="無" onclick="selectJsei(this)" style="flex:1">無</button>
-      </div>
-    </div>
-    <div class="field">
       <label>主石・脇石</label>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button class="rank-btn" data-stone="なし" onclick="selectStone(this)">なし</button>
@@ -614,9 +607,6 @@ function selectSmell(btn) {
 function selectJsei(btn) {
   document.querySelectorAll('[data-jsei]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  if (btn.dataset.jsei === '有') {
-    showAzukariModal();
-  }
 }
 function showAzukariModal() {
   const existing = document.getElementById('modal-overlay');
@@ -816,6 +806,15 @@ function addToCart() {
   const rankBtn = document.querySelector('[data-rank].active');
   const rank = rankBtn ? rankBtn.dataset.rank : '';
   const conditions = Array.from(document.querySelectorAll('.check-item.checked:not(.watch-acc)')).map(el => el.dataset.value);
+  // 貴金属かつ磁性有 → 預かりカートへ
+  if (currentCat === '貴金属' && metalData.jsei === '有') {
+    azukariCart.push({ metalData, rank, conditions, images: [...currentImages] });
+    renderAzukariList();
+    resetItem();
+    updateSubmitBtn();
+    showToast(`⚠️ 磁性あり → 預かり ${azukariCart.length} 点に追加しました`);
+    return;
+  }
   cart.push({ cat: currentCat, brand, productName, serial, metal, rank, conditions, watchData, metalData, images: [...currentImages] });
   renderCart();
   resetItem();
