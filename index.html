@@ -162,7 +162,6 @@
 </style>
 </head>
 <body>
-
 <!-- PAT Setup Screen -->
 <div id="pat-screen" style="display:none">
   <header>
@@ -179,41 +178,24 @@
     <button class="btn btn-primary" onclick="savePat()">保存して開始</button>
   </div>
 </div>
-
 <!-- Main App -->
 <div id="main-app" style="display:none">
-
 <header>
   <img src="telesatei2.png" alt="TELESA:TEI" style="height:80px;margin-bottom:8px">
   <h1>リモート査定 依頼フォーム</h1>
 </header>
-
 <!-- STEP 1: Header info -->
 <div class="card" id="section-header">
   <div class="card-title">依頼情報</div>
   <div class="field">
     <label>店舗</label>
-    <select id="store">
-      <option value="">選択してください</option>
-      <option>成田店</option><option>高岡店</option><option>木更津店</option>
-      <option>パルナ店</option><option>北見店</option><option>釧路店</option>
-      <option>帯広店</option><option>札幌苗穂店</option><option>盛岡店</option>
-      <option>上磯店</option><option>下田店</option><option>つがる柏店</option>
-      <option>秋田店</option><option>大曲店</option><option>久御山店</option>
-      <option>四條畷店</option><option>泉南店</option><option>名古屋茶屋店</option>
-      <option>津南店</option><option>豊川店</option><option>宮崎店</option>
-      <option>鹿児島店</option><option>沖縄ライカム店</option><option>熊本店</option>
-      <option>直方店</option><option>八幡東店</option><option>大分店</option>
-      <option>筑紫野店</option><option>高知店</option><option>倉敷店</option>
-      <option>岡山店</option><option>水戸店</option><option>いわき小名浜店</option>
-      <option>下妻店</option><option>名取店</option><option>つくば店</option>
-      <option>石巻店</option><option>新利府店</option><option>越谷店</option>
-      <option>新小松店</option><option>白山店</option><option>むさし村山店</option>
-      <option>春日部店</option><option>日の出店</option><option>長岡店</option>
-      <option>川口店</option><option>羽生店</option><option>高崎店</option>
-      <option>前橋店</option><option>松本店</option><option>甲府昭和店</option>
-      <option>東松山店</option><option>富士見店</option><option>磐田店</option>
-    </select>
+    <div class="brand-search-wrap">
+      <input type="text" class="brand-search-input" id="store-input"
+        placeholder="店舗名を入力（例：な…成田店）"
+        oninput="searchStore(this)" onblur="closeStoreDrop()" autocomplete="off">
+      <div class="brand-dropdown" id="store-drop"></div>
+    </div>
+    <div id="store-loading" style="font-size:12px;color:var(--sub);margin-top:4px;display:none">メンバー取得中...</div>
   </div>
   <div class="field">
     <label>起票者名</label>
@@ -232,7 +214,6 @@
   </div>
   <div class="pat-reset" onclick="resetPat()">APIキーを変更する</div>
 </div>
-
 <!-- STEP 2: Item entry -->
 <div class="card" id="section-item">
   <div class="card-title">商品を追加</div>
@@ -246,7 +227,6 @@
       <button class="cat-btn" data-cat="貴金属" onclick="selectCat(this)">貴金属</button>
     </div>
   </div>
-
   <!-- ブランドバッグ / ブランド小物 共通 -->
   <div id="fields-bag" style="display:none">
     <div class="field">
@@ -265,7 +245,6 @@
       <input type="text" id="serial-bag" placeholder="例：M40156">
     </div>
   </div>
-
   <!-- ブランドジュエリー -->
   <div id="fields-jewelry" style="display:none">
     <div class="field">
@@ -291,8 +270,6 @@
       <input type="text" id="serial-jewelry" placeholder="例：B4085400">
     </div>
   </div>
-
-
   <!-- 時計 -->
   <div id="fields-watch" style="display:none">
     <div class="field">
@@ -339,7 +316,6 @@
       <input type="text" id="note-watch" placeholder="特記事項があれば">
     </div>
   </div>
-
   <!-- 貴金属 -->
   <div id="fields-metal" style="display:none">
     <div class="field">
@@ -428,7 +404,6 @@
       </div>
     </div>
   </div>
-
   <!-- 画像 -->
   <div class="field" id="field-images" style="display:none">
     <label>画像</label>
@@ -438,13 +413,11 @@
     </div>
     <div class="img-preview" id="img-preview"></div>
   </div>
-
   <div class="btn-row" id="item-actions" style="display:none">
     <button class="btn btn-ghost" onclick="resetItem()">リセット</button>
     <button class="btn btn-primary" onclick="addToCart()">商品追加完了</button>
   </div>
 </div>
-
 <!-- Cart -->
 <div class="card" id="section-cart">
   <div class="card-title">追加済み商品</div>
@@ -456,18 +429,14 @@
     Asanaに送信
   </button>
 </div>
-
 <div class="submit-result" id="submit-result">
   <h2>✓ 送信完了</h2>
   <p id="submit-task-link"></p>
   <br>
   <button class="btn btn-secondary" onclick="resetAll()">新しい依頼を作成</button>
 </div>
-
 </div><!-- /main-app -->
-
 <div id="toast"></div>
-
 <script>
 // ===== CONFIG =====
 const ASANA_PROJECT_ID = '1215896672136706';
@@ -477,11 +446,12 @@ const STORE_MAP = {
 };
 let ASANA_PAT = '';
 // ==================
-
 let cart = [];
 let currentCat = null;
 let currentImages = [];
-
+let azukariSectionId = null;
+let projectMembers = []; // {gid, name}
+let selectedMember = null; // {gid, name}
 // --- PAT management ---
 function init() {
   const saved = localStorage.getItem('asana_pat');
@@ -492,7 +462,6 @@ function init() {
     document.getElementById('pat-screen').style.display = 'block';
   }
 }
-
 function savePat() {
   const val = document.getElementById('pat-input').value.trim();
   if (!val) return showToast('APIキーを入力してください');
@@ -501,11 +470,57 @@ function savePat() {
   document.getElementById('pat-screen').style.display = 'none';
   showApp();
 }
-
 function showApp() {
   document.getElementById('main-app').style.display = 'block';
+  fetchAzukariSection();
+  fetchProjectMembers();
 }
-
+async function fetchProjectMembers() {
+  document.getElementById('store-loading').style.display = 'block';
+  try {
+    const res = await fetch(`https://app.asana.com/api/1.0/projects/${ASANA_PROJECT_ID}/members?opt_fields=gid,name`, {
+      headers: { 'Authorization': `Bearer ${ASANA_PAT}`, 'Accept': 'application/json' }
+    });
+    const data = await res.json();
+    projectMembers = (data.data || []).map(m => ({ gid: m.gid, name: m.name }));
+  } catch(e) { /* サイレントフェイル */ }
+  document.getElementById('store-loading').style.display = 'none';
+}
+function searchStore(input) {
+  const q = input.value.trim();
+  const drop = document.getElementById('store-drop');
+  selectedMember = null;
+  updateSubmitBtn();
+  if (!q) { drop.classList.remove('open'); return; }
+  const toKatakana = s => s.replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+  const qk = toKatakana(q);
+  const results = projectMembers.filter(m => m.name.includes(q) || m.name.includes(qk) || toKatakana(m.name).includes(qk));
+  if (results.length === 0) { drop.classList.remove('open'); return; }
+  drop.innerHTML = results.map(m =>
+    `<div class="brand-option" onmousedown="selectStore('${m.gid}','${m.name.replace(/'/g,"\\'")}')"> ${m.name}</div>`
+  ).join('');
+  drop.classList.add('open');
+}
+function selectStore(gid, name) {
+  selectedMember = { gid, name };
+  document.getElementById('store-input').value = name;
+  document.getElementById('store-drop').classList.remove('open');
+  updateSubmitBtn();
+}
+function closeStoreDrop() {
+  setTimeout(() => document.getElementById('store-drop').classList.remove('open'), 150);
+}
+async function fetchAzukariSection() {
+  if (!ASANA_PAT) return;
+  try {
+    const res = await fetch(`https://app.asana.com/api/1.0/projects/${ASANA_PROJECT_ID}/sections`, {
+      headers: { 'Authorization': `Bearer ${ASANA_PAT}`, 'Accept': 'application/json' }
+    });
+    const data = await res.json();
+    const sec = (data.data || []).find(s => s.name === '検査預かり');
+    if (sec) azukariSectionId = sec.gid;
+  } catch(e) { /* サイレントフェイル */ }
+}
 function resetPat() {
   if (!confirm('APIキーをリセットしますか？')) return;
   localStorage.removeItem('asana_pat');
@@ -514,7 +529,6 @@ function resetPat() {
   document.getElementById('pat-screen').style.display = 'block';
   document.getElementById('pat-input').value = '';
 }
-
 // --- Category ---
 function selectCat(btn) {
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
@@ -532,19 +546,13 @@ function selectCat(btn) {
   document.getElementById('field-images').style.display = 'block';
   document.getElementById('item-actions').style.display = 'flex';
 }
-
-
 // --- Images ---
-
-
-
 const BRANDS = {
   'ブランドバッグ': ['ルイヴィトン','エルメス','グッチ','クロエ','ケイトスペード','コーチ','サンローラン','シャネル','ダンヒル','トリーバーチ','バーバリー','サルヴァトーレフェラガモ','プラダ','ブルガリ','フルラ','マークジェイコブス','マイケルコース','ロエベ','マルニ','ティファニー','ヴァレクストラ','フェンディ','ジバンシィ','クリスチャンディオール','ミュウミュウ','カルティエ','ヴェルサーチ','バレンシアガ','バカラ','ヴァレンティノ','メゾンマルジェラ','ドルチェ＆ガッバーナ','バオバオ','ゴヤール','セリーヌ','ボッテガヴェネタ','ハンター','ステラマッカートニー','ヴィヴィアンウエストウッド','クリスチャンルブタン','ロンシャン','バリー','プリマクラッセ','ジミーチュウ','モンブラン','MCM','サマンサ','ポーター','キプリング','マンハッタンポーテージ','パトリックコックス','クロムハーツ','エトロ','ゲス','アルマーニ','カルバンクライン','トミーヒルフィガー','ディーゼル','レスポートサック','マリオバレンチノ','ボルボネーゼ','フェイラー','アンテプリマ','キャスキッドソン','イルビゾンテ','ポールスミス','アニエスベー','シーバイクロエ','オロビアンコ','フルボ','ダコタ','ハンティングワールド'],
   'ブランド小物': ['ルイヴィトン','エルメス','グッチ','クロエ','ケイトスペード','コーチ','サンローラン','シャネル','ダンヒル','トリーバーチ','バーバリー','サルヴァトーレフェラガモ','プラダ','ブルガリ','フルラ','マークジェイコブス','マイケルコース','ロエベ','マルニ','ティファニー','ヴァレクストラ','フェンディ','ジバンシィ','クリスチャンディオール','ミュウミュウ','カルティエ','ヴェルサーチ','バレンシアガ','バカラ','ヴァレンティノ','メゾンマルジェラ','ドルチェ＆ガッバーナ','バオバオ','ゴヤール','セリーヌ','ボッテガヴェネタ','クロムハーツ','エトロ','ゲス','アルマーニ','カルバンクライン','トミーヒルフィガー','ディーゼル','ポールスミス'],
   'ブランドジュエリー': ['ルイヴィトン','エルメス','グッチ','クロエ','ケイトスペード','コーチ','サンローラン','シャネル','ダンヒル','トリーバーチ','バーバリー','サルヴァトーレフェラガモ','プラダ','ブルガリ','フルラ','マークジェイコブス','マイケルコース','ロエベ','マルニ','ティファニー','フェンディ','ジバンシィ','クリスチャンディオール','ミュウミュウ','カルティエ','ヴェルサーチ','バレンシアガ','バカラ','ヴァレンティノ','ドルチェ＆ガッバーナ','セリーヌ','ボッテガヴェネタ','ブシュロン','ハリーウィンストン','ミキモト','ポメラート','グラフ','タサキ','ヴァンクリーフアーペル','モーブッサン','ジミーチュウ','ショパール','フレッド','ショーメ','スワロフスキー','ダミアーニ','ヴィヴィアンウエストウッド','4℃','クロムハーツ','カルバンクライン','トミーヒルフィガー','ディーゼル','ゲス','ポリス'],
   '時計': ['グランドセイコー','クレドール','ロレックス','オメガ','タグホイヤー','ロンジン','パテックフィリップ','オーデマピゲ','ヴァシュロンコンスタンタン','A.ランゲ＆ゾーネ','ブレゲ','ブランパン','ジャガールクルト','チューダー','IWC','パネライ','ゼニス','ブライトリング','カルティエ','ティファニー','エルメス','グッチ','ショパール','ピアジェ','クラスヒュッテオリジナル','ハリーウィンストン','シャネル','ラドー','ジラールペルゴ','コルム','オリス','ノモスグラスヒュッテ','ユリスナルダン','フレデリックコンスタント','ハミルトン','ティソ','モンブラン','ユンハンス','エドックス','ドルチェ＆ガッバーナ','セイコー','カシオ','シチズン','ザシチズン','オリエント','オリエントスター','ガガミラノ','ダニエルウエリントン','コーチ','ケートスペード','マイケルコース','ポールスミス','ディーゼル','タイメックス','ルミノックス','ヴェルサーチェ','ポリス','フェンディ','フェラガモ','ドルチェ＆ガッバーナ','ダンヒル','バーバリー','アルマーニ','フルラ','トミーヒルフィガー','カルバンクライン','ベル＆ロス','フランクミュラー','ルイヴィトン','ブルガリ','ボーム＆メルシエ','ジン','ハブロット']
 };
-
 function searchBrand(input, dropId) {
   const q = input.value.trim();
   const drop = document.getElementById(dropId);
@@ -552,7 +560,7 @@ function searchBrand(input, dropId) {
   const cat = currentCat || '';
   const list = BRANDS[cat] || [];
   // ひらがな→カタカナ変換して部分一致
-  const toKatakana = s => s.replace(/[\u3041-\u3096]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+  const toKatakana = s => s.replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
   const qk = toKatakana(q);
   const results = list.filter(b => b.includes(q) || b.includes(qk) || toKatakana(b).includes(qk));
   if (results.length === 0) { drop.classList.remove('open'); return; }
@@ -561,12 +569,10 @@ function searchBrand(input, dropId) {
   ).join('');
   drop.classList.add('open');
 }
-
 function selectBrand(val, inputId, dropId) {
   document.getElementById(inputId).value = val;
   document.getElementById(dropId).classList.remove('open');
 }
-
 function closeDrop(dropId) {
   setTimeout(() => {
     const d = document.getElementById(dropId);
@@ -593,7 +599,111 @@ function selectJsei(btn) {
   document.querySelectorAll('[data-jsei]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if (btn.dataset.jsei === '有') {
-    showModal('この商品は預かりになります');
+    showAzukariModal();
+  }
+}
+function showAzukariModal() {
+  const existing = document.getElementById('modal-overlay');
+  if (existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:24px;max-width:280px;width:100%;text-align:center';
+  box.innerHTML = '<div style="font-size:28px;margin-bottom:12px">&#9888;</div><div style="font-size:16px;font-weight:700;color:#1A1916;margin-bottom:8px">預かり品</div><div style="font-size:14px;color:#7A7770;margin-bottom:20px">磁性あり。この商品を「あずかり」としてAsanaに即時送信します。</div><div id="azukari-sending" style="display:none;font-size:13px;color:#7A7770;margin-bottom:12px">送信中...</div>';
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:8px';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'キャンセル';
+  cancelBtn.style.cssText = 'flex:1;background:#F0EDE8;color:#7A7770;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer';
+  cancelBtn.onclick = function() {
+    // 磁性を「無」に戻す
+    document.querySelectorAll('[data-jsei]').forEach(b => b.classList.remove('active'));
+    overlay.remove();
+  };
+  const okBtn = document.createElement('button');
+  okBtn.textContent = 'Asanaに送信';
+  okBtn.style.cssText = 'flex:1;background:#2B4C3F;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer';
+  okBtn.onclick = async function() {
+    okBtn.disabled = true; cancelBtn.disabled = true;
+    document.getElementById('azukari-sending').style.display = 'block';
+    await submitAzukariItem();
+    overlay.remove();
+  };
+  btnRow.appendChild(cancelBtn);
+  btnRow.appendChild(okBtn);
+  box.appendChild(btnRow);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+async function submitAzukariItem() {
+  const store = selectedMember ? selectedMember.name : '未選択';
+  const requester = document.getElementById('requester').value.trim() || '未入力';
+  const NL = String.fromCharCode(10);
+  // 現在の貴金属フォームから収集
+  const hijuNG = document.getElementById('hiju-ng-btn').classList.contains('active');
+  const metalData = {
+    kinshu: document.getElementById('kinshu').value,
+    weight: document.getElementById('weight-metal').value,
+    hiju: hijuNG ? 'できなかった' : document.getElementById('hiju-val').value,
+    jsei: '有',
+    stone: document.querySelector('[data-stone].active')?.dataset.stone || '',
+    gem: document.querySelector('[data-gem].active')?.dataset.gem || '',
+    dia: document.querySelector('[data-dia].active')?.dataset.dia || '',
+    ctTop: document.getElementById('ct-top').value,
+    ctWaki: document.getElementById('ct-waki').value,
+  };
+  const rank = document.querySelector('[data-rank].active')?.dataset.rank || '';
+  const conditions = Array.from(document.querySelectorAll('.check-item.checked:not(.watch-acc)')).map(el => el.dataset.value);
+  const parts = ['カテゴリ: 貴金属', '⚠️ 磁性: 有 → 預かり品'];
+  if (metalData.kinshu) parts.push('金種: ' + metalData.kinshu);
+  if (metalData.weight) parts.push('総重量: ' + metalData.weight + 'g');
+  if (metalData.hiju) parts.push('比重値: ' + metalData.hiju);
+  if (metalData.stone) parts.push('主石・脇石: ' + metalData.stone);
+  if (metalData.gem) parts.push('ジェムテスター: ' + metalData.gem);
+  if (metalData.dia) parts.push('ダイヤテスター: ' + metalData.dia);
+  const ct = [metalData.ctTop ? '主石'+metalData.ctTop+'ct' : '', metalData.ctWaki ? '脇石'+metalData.ctWaki+'ct' : ''].filter(Boolean).join(' ');
+  if (ct) parts.push('ct: ' + ct);
+  if (rank) parts.push('状態: ' + rank);
+  if (conditions.length > 0) parts.push('状態詳細: ' + conditions.join('・'));
+  if (currentImages.length > 0) parts.push('画像: ' + currentImages.length + '枚添付');
+  const repeaterBtn = document.querySelector('[data-repeater].active');
+  const repeater = repeaterBtn ? repeaterBtn.dataset.repeater : '';
+  const headerLines = ['<start>', '店舗: ' + store, '起票者: ' + requester, '【預かり品】'];
+  if (repeater) headerLines.push('リピーター: ' + repeater);
+  const notes = headerLines.join(NL) + NL + NL + parts.join(NL) + NL + NL + '<end>';
+  const taskName = `【預かり】${store} / ${requester} 貴金属(磁性有)`;
+  try {
+    const memberships = azukariSectionId
+      ? [{ project: ASANA_PROJECT_ID, section: azukariSectionId }]
+      : [{ project: ASANA_PROJECT_ID }];
+    const taskRes = await fetch('https://app.asana.com/api/1.0/tasks', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${ASANA_PAT}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ data: { name: taskName, notes, memberships } })
+    });
+    const taskData = await taskRes.json();
+    if (!taskRes.ok) throw new Error(taskData.errors?.[0]?.message || '作成失敗');
+    const taskId = taskData.data.gid;
+    for (const img of currentImages) {
+      const formData = new FormData();
+      formData.append('file', img.file, img.file.name);
+      await fetch(`https://app.asana.com/api/1.0/tasks/${taskId}/attachments`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${ASANA_PAT}` },
+        body: formData
+      });
+    }
+    resetItem();
+    showToast('預かり品をAsanaに送信しました');
+  } catch(e) {
+    showToast('エラー: ' + e.message);
+    // 磁性ボタンを無効に戻す
+    document.querySelectorAll('[data-jsei]').forEach(b => b.classList.remove('active'));
   }
 }
 function selectStone(btn) {
@@ -617,22 +727,18 @@ function toggleHijuNG(btn) {
   document.getElementById('hiju-val').disabled = btn.classList.contains('active');
   if (btn.classList.contains('active')) document.getElementById('hiju-val').value = '';
 }
-
 function selectRank(btn) {
   document.querySelectorAll('[data-rank]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
-
 function toggleCheckAcc(el) {
   el.classList.toggle('checked');
   el.querySelector('.check-icon').textContent = el.classList.contains('checked') ? '✓' : '';
 }
-
 function toggleCheck(el) {
   el.classList.toggle('checked');
   el.querySelector('.check-icon').textContent = el.classList.contains('checked') ? '✓' : '';
 }
-
 function addImages(input) {
   Array.from(input.files).forEach(file => {
     const reader = new FileReader();
@@ -644,7 +750,6 @@ function addImages(input) {
   });
   input.value = '';
 }
-
 function renderImagePreview() {
   const preview = document.getElementById('img-preview');
   preview.innerHTML = '';
@@ -655,12 +760,10 @@ function renderImagePreview() {
     preview.appendChild(div);
   });
 }
-
 function removeImage(i) {
   currentImages.splice(i, 1);
   renderImagePreview();
 }
-
 // --- Cart ---
 function addToCart() {
   if (!currentCat) return showToast('カテゴリを選択してください');
@@ -717,7 +820,6 @@ function addToCart() {
   updateSubmitBtn();
   showToast(`商品 ${cart.length} 点目を追加しました`);
 }
-
 function renderCart() {
   const list = document.getElementById('cart-list');
   if (cart.length === 0) { list.innerHTML = '<div class="empty-cart">まだ商品がありません</div>'; return; }
@@ -741,13 +843,11 @@ function renderCart() {
     </div>
   `).join('');
 }
-
 function removeFromCart(i) {
   cart.splice(i, 1);
   renderCart();
   updateSubmitBtn();
 }
-
 function resetItem() {
   currentCat = null;
   currentImages = [];
@@ -772,30 +872,23 @@ function resetItem() {
   ['name-bag','serial-bag','brand-bag','name-jewelry','serial-jewelry','metal','brand-jewelry']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 }
-
 function updateSubmitBtn() {
-  const store = document.getElementById('store').value;
   const req = document.getElementById('requester').value.trim();
-  document.getElementById('submit-btn').disabled = !(store && req && cart.length > 0);
+  document.getElementById('submit-btn').disabled = !(selectedMember && req && cart.length > 0);
 }
-
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('store').addEventListener('change', updateSubmitBtn);
   document.getElementById('requester').addEventListener('input', updateSubmitBtn);
   init();
 });
-
 // --- Asana submit ---
 async function submitToAsana() {
-  const store = document.getElementById('store').value;
+  const store = selectedMember ? selectedMember.name : '';
   const requester = document.getElementById('requester').value.trim();
   const totalItems = document.getElementById('total-items').value || cart.length;
   if (!store || !requester || cart.length === 0) return;
-
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
   btn.textContent = '送信中...';
-
   const NL = String.fromCharCode(10);
   const itemTexts = cart.map((item, i) => {
     const parts = [(i + 1) + ':', 'カテゴリ: ' + item.cat];
@@ -836,9 +929,7 @@ async function submitToAsana() {
   const headerLines = ['<start>', '店舗: ' + store, '起票者: ' + requester, '総点数: ' + totalItems + '点'];
   if (repeater) headerLines.push('リピーター: ' + repeater);
   const lines = headerLines.join(NL) + NL + NL + itemTexts.join(NL + NL) + NL + NL + '<end>';
-
   const taskName = `【査定依頼】${store} / ${requester} (${cart.length}点)`;
-
   try {
     const taskRes = await fetch('https://app.asana.com/api/1.0/tasks', {
       method: 'POST',
@@ -851,12 +942,11 @@ async function submitToAsana() {
           name: taskName,
           notes: lines,
           projects: [ASANA_PROJECT_ID],
-          followers: [STORE_MAP[store]].filter(Boolean)
+          followers: selectedMember ? [selectedMember.gid] : []
         } })
     });
     const taskData = await taskRes.json();
     if (!taskRes.ok) throw new Error(taskData.errors?.[0]?.message || '作成失敗');
-
     const taskId = taskData.data.gid;
     const allImages = cart.flatMap(item => item.images);
     for (const img of allImages) {
@@ -868,26 +958,24 @@ async function submitToAsana() {
         body: formData
       });
     }
-
     document.getElementById('submit-result').classList.add('show');
     document.getElementById('submit-task-link').innerHTML =
       `タスクID: ${taskId}<br><a href="https://app.asana.com/0/${ASANA_PROJECT_ID}/${taskId}" target="_blank" style="color:var(--accent)">Asanaで確認する →</a>`;
     document.getElementById('section-header').style.display = 'none';
     document.getElementById('section-item').style.display = 'none';
     document.getElementById('section-cart').style.display = 'none';
-
   } catch (e) {
     showToast('エラー: ' + e.message);
     btn.disabled = false;
     btn.textContent = 'Asanaに送信';
   }
 }
-
 function resetAll() {
   cart = [];
   currentCat = null;
   currentImages = [];
-  document.getElementById('store').value = '';
+  selectedMember = null;
+  document.getElementById('store-input').value = '';
   document.getElementById('requester').value = '';
   document.getElementById('total-items').value = '';
   renderCart();
@@ -898,7 +986,6 @@ function resetAll() {
   document.getElementById('section-item').style.display = 'block';
   document.getElementById('section-cart').style.display = 'block';
 }
-
 function showModal(msg) {
   const existing = document.getElementById('modal-overlay');
   if (existing) existing.remove();
@@ -916,7 +1003,6 @@ function showModal(msg) {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 }
-
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
