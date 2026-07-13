@@ -646,6 +646,38 @@ function showAzukariModal() {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 }
+function showAzukariConfirm(item) {
+  const existing = document.getElementById('modal-overlay');
+  if (existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:24px;max-width:280px;width:100%;text-align:center';
+  box.innerHTML = '<div style="font-size:28px;margin-bottom:12px">⚠️</div><div style="font-size:15px;font-weight:700;color:#1A1916;margin-bottom:8px">磁性あり</div><div style="font-size:13px;color:#7A7770;margin-bottom:20px">この商品は通常査定には入りません。預かり対応品として追加しますか？</div>';
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:8px';
+  const noBtn = document.createElement('button');
+  noBtn.textContent = 'No';
+  noBtn.style.cssText = 'flex:1;background:#F0EDE8;color:#7A7770;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer';
+  noBtn.onclick = function() { overlay.remove(); };
+  const yesBtn = document.createElement('button');
+  yesBtn.textContent = 'Yes';
+  yesBtn.style.cssText = 'flex:1;background:#2B4C3F;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer';
+  yesBtn.onclick = function() {
+    overlay.remove();
+    azukariCart.push(item);
+    renderAzukariList();
+    resetItem();
+    updateSubmitBtn();
+    showToast(`⚠️ 預かり対応品 ${azukariCart.length} 点に追加しました`);
+  };
+  btnRow.appendChild(noBtn);
+  btnRow.appendChild(yesBtn);
+  box.appendChild(btnRow);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
 function addToAzukariCart() {
   const hijuNG = document.getElementById('hiju-ng-btn').classList.contains('active');
   const metalData = {
@@ -813,13 +845,9 @@ function addToCart() {
   const rankBtn = document.querySelector('[data-rank].active');
   const rank = rankBtn ? rankBtn.dataset.rank : '';
   const conditions = Array.from(document.querySelectorAll('.check-item.checked:not(.watch-acc)')).map(el => el.dataset.value);
-  // 貴金属かつ磁性有 → 預かりカートへ
+  // 貴金属かつ磁性有 → 確認モーダル → 預かりカートへ
   if (currentCat === '貴金属' && metalData.jsei === '有') {
-    azukariCart.push({ metalData, rank, conditions, images: [...currentImages] });
-    renderAzukariList();
-    resetItem();
-    updateSubmitBtn();
-    showToast(`⚠️ 磁性あり → 預かり ${azukariCart.length} 点に追加しました`);
+    showAzukariConfirm({ metalData, rank, conditions, images: [...currentImages] });
     return;
   }
   cart.push({ cat: currentCat, brand, productName, serial, metal, rank, conditions, watchData, metalData, images: [...currentImages] });
