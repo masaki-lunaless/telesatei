@@ -212,6 +212,20 @@
       <button class="rank-btn" data-repeater="いいえ" onclick="selectRepeater(this)" style="flex:1">いいえ</button>
     </div>
   </div>
+  <div class="field">
+    <label>相見積もりですか？</label>
+    <div style="display:flex;gap:8px">
+      <button class="rank-btn" data-aimi="はい" onclick="selectAimi(this)" style="flex:1">はい</button>
+      <button class="rank-btn" data-aimi="いいえ" onclick="selectAimi(this)" style="flex:1">いいえ</button>
+    </div>
+  </div>
+  <div class="field" id="field-reiten" style="display:none">
+    <label>再来店ですか？</label>
+    <div style="display:flex;gap:8px">
+      <button class="rank-btn" data-reiten="はい" onclick="selectReiten(this)" style="flex:1">はい</button>
+      <button class="rank-btn" data-reiten="いいえ" onclick="selectReiten(this)" style="flex:1">いいえ</button>
+    </div>
+  </div>
   <div class="pat-reset" onclick="resetPat()">APIキーを変更する</div>
 </div>
 <!-- STEP 2: Item entry -->
@@ -599,6 +613,20 @@ function selectRepeater(btn) {
   document.querySelectorAll('[data-repeater]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
+function selectAimi(btn) {
+  document.querySelectorAll('[data-aimi]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const isYes = btn.dataset.aimi === 'はい';
+  const reitenField = document.getElementById('field-reiten');
+  reitenField.style.display = isYes ? 'block' : 'none';
+  if (!isYes) {
+    document.querySelectorAll('[data-reiten]').forEach(b => b.classList.remove('active'));
+  }
+}
+function selectReiten(btn) {
+  document.querySelectorAll('[data-reiten]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
 function selectAuth(btn) {
   document.querySelectorAll('[data-auth]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -965,8 +993,14 @@ async function submitToAsana() {
   });
   const repeaterBtn = document.querySelector('[data-repeater].active');
   const repeater = repeaterBtn ? repeaterBtn.dataset.repeater : '';
+  const aimiBtn = document.querySelector('[data-aimi].active');
+  const aimi = aimiBtn ? aimiBtn.dataset.aimi : '';
+  const reitenBtn = document.querySelector('[data-reiten].active');
+  const reiten = reitenBtn ? reitenBtn.dataset.reiten : '';
   const headerLines = ['<start>', '店舗: ' + store, '起票者: ' + requester, '総点数: ' + totalItems + '点'];
   if (repeater) headerLines.push('リピーター: ' + repeater);
+  if (aimi) headerLines.push('相見積もり: ' + aimi);
+  if (aimi === 'はい' && reiten) headerLines.push('再来店: ' + reiten);
   const lines = headerLines.join(NL) + NL + NL + itemTexts.join(NL + NL) + NL + NL + '<end>';
   const taskName = `【査定依頼】${store} / ${requester} (${cart.length}点)`;
   try {
